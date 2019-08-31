@@ -47,10 +47,6 @@ def delete_Create_Scheduler():
 		sched.remove_job(str(j))
 
 
-
-
-
-
 if __name__ == "__main__":
 	x=Get_Scheduler()
 	Create_Scheduler(x)

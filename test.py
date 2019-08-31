@@ -40,9 +40,9 @@ def Create_Scheduler(x):
 		temp=datetime.strptime(u['schedule_time'], '%H:%M:%S')
 		#format = '%H:%M:%S'
 		sched.add_job(task, 'cron',hour=temp.hour,minute=temp.minute,id=str(i),kwargs={"a":u['Tag'],"b":u['food_amount']})
-		i+=1
+		i+=1	
 
-def delete_Create_Scheduler():
+def delete_Create_Scheduler(x):
 	for j in i:
 		sched.remove_job(str(j))
 

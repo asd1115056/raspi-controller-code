@@ -2,27 +2,53 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from datetime import datetime
 import requests
 import json
-import logging
 
 url1 = 'http://localhost:8000/ajax/all_list_Schedule'
 sched = BlockingScheduler()
+count=0
 
 
 def Add_Scheduler(x):
-    sched.remove_all_jobs()
+    id_count=0
     for u in x:
         temp = datetime.strptime(u['schedule_time'], '%H:%M:%S')
-        sched.add_job(task, 'cron', hour=temp.hour, minute=temp.minute, kwargs={"a": u['Tag'], "b": u['food_amount']})
+        sched.add_job(task, 'cron',id=str(id_count), hour=temp.hour, minute=temp.minute, kwargs={"a": u['Tag'], "b": u['food_amount']})
+        id_count+=1
 
+def delete_Scheduler(x):
+	for j in range(0 ,x):
+		sched.remove_job(str(j))
 
 def task(a, b):
     print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), a, b)
 
 
-def sync():
-    global url1, sched
+def sync():  
+    global url1,sched,count
+    new = []
     try:
-        r = requests.get(url1)
+        response = requests.get(url1)
+        response.raise_for_status()
+        r=json.loads(response.text)
+        for di in r:
+            new.append(di['fields'])
+        if count==0:
+            Add_Scheduler(new)
+            print(sched.get_jobs(), 'Connection:first')
+            with open('Scheduler_save.text', 'w') as f:
+                f.write(str(new))
+            count = 1
+        else:
+            with open('Scheduler_save.text', 'r') as f:
+                output = eval(f.readline())
+            if new != output:
+                delete_Scheduler(len(output))
+                Add_Scheduler(new)
+                print(sched.get_jobs(), 'Connection:change')
+                with open('Scheduler_save.text', 'w') as f:
+                    f.write(str(new))
+            else:
+                print(sched.get_jobs(), 'Connection:same')  
     except requests.exceptions.RequestException:
         try:
             with open('Scheduler_save.text', 'r') as f:
@@ -30,42 +56,15 @@ def sync():
         except IOError:
             print("Error: 没有找到文件或读取文件失败(ConnectionError)")
         else:
-            Add_Scheduler(output)
-            print(sched.get_jobs(), 'ConnectionError')
-    else:
-        if r.status_code == 200:
-            temp1 = []
-            r = json.loads(r.text)
-            for di in r:
-                temp1.append(di['fields'])
-            try:
-                with open('Scheduler_save.text', 'r') as f:
-                    output = eval(f.readline())
-            except IOError:
-                print("Error: 没有找到文件或读取文件失败(200)")
-                Add_Scheduler(temp1)
-                print(sched.get_jobs(), 'first')
-                with open('Scheduler_save.text', 'w') as f:
-                    f.write(str(temp1))
-            else:
-                if temp1 != output:
-                    Add_Scheduler(temp1)
-                    print(sched.get_jobs(), 'check')
-                    with open('Scheduler_save.text', 'w') as f:
-                        f.write(str(temp1))
-                else:
-                    None
-        else:
-            print("reconnect")
-            try:
-                with open('Scheduler_save.text', 'r') as f:
-                    output = eval(f.readline())
-            except IOError:
-                print("Error: 没有找到文件或读取文件失败")
-            else:
+            if count==0:
                 Add_Scheduler(output)
-                print(sched.get_jobs(), 'reconnect')
+                print(sched.get_jobs(), 'ConnectionError:first')
+                count = 1
+            else:
+                delete_Scheduler(len(output))
+                Add_Scheduler(output)
+                print(sched.get_jobs(), 'ConnectionError:same')
 
 
-sched.add_job(sync, 'interval', seconds=10)
+sched.add_job(sync, 'interval', seconds=5)
 sched.start()

@@ -28,18 +28,28 @@ def Get_Scheduler():
 	return temp	
 
 def Sync_Scheduler():
+	sched.add_job(task, 'interval',seconds=300)
 
-
-#temp=datetime.strptime(time2, format)
 def task(a,b):
     print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"),a,b)
+
 def Create_Scheduler(x):
+	global i
 	i=0
 	for u in x:
 		temp=datetime.strptime(u['schedule_time'], '%H:%M:%S')
 		#format = '%H:%M:%S'
 		sched.add_job(task, 'cron',hour=temp.hour,minute=temp.minute,id=str(i),kwargs={"a":u['Tag'],"b":u['food_amount']})
 		i+=1
+
+def delete_Create_Scheduler():
+	for j in i:
+		sched.remove_job(str(j))
+
+
+
+
+
 
 if __name__ == "__main__":
 	x=Get_Scheduler()

@@ -3,6 +3,7 @@ from bluepy.btle import *
 suuid = UUID(0xffe0)
 cuuid = UUID(0xffe1)
 setup_data = b"\x01\x00"
+mac="11:15:85:00:4f:ee"
 # suuid="0000ffe0-0000-1000-8000-00805f9b34fb"
 # chara_uuid="0000ffe1-0000-1000-8000-00805f9b34fb"
 
@@ -18,7 +19,7 @@ class MyDelegate(DefaultDelegate):
         # ... process 'data'
 
 
-p = Peripheral("11:15:85:00:4f:ee")
+p = Peripheral(mac)
 p.setDelegate(MyDelegate())
 print("connected")
 

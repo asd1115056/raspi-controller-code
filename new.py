@@ -2,11 +2,25 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from datetime import datetime
 import requests
 import json
+import os 
+import time 
+import ntplib 
 
 url1 = 'http://localhost:8000/ajax/all_list_Schedule'
 sched = BlockingScheduler()
 count=0
 
+def sync_time():
+    try:  
+        c = ntplib.NTPClient() 
+        response = c.request('pool.ntp.org') 
+        ts = response.tx_time 
+        _date = time.strftime('%Y-%m-%d',time.localtime(ts)) 
+        _time = time.strftime('%X',time.localtime(ts)) 
+        os.system('date {} && time {}'.format(_date,_time)) 
+    except:
+        print('sync_time:could not sync with time server.')
+    print('sync_time:Done.')
 
 def Add_Scheduler(x):
     id_count=0
@@ -16,8 +30,8 @@ def Add_Scheduler(x):
         id_count+=1
 
 def delete_Scheduler(x):
-	for j in range(0 ,x):
-		sched.remove_job(str(j))
+    for j in range(0 ,x):
+        sched.remove_job(str(j))
 
 def task(a, b):
     print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), a, b)
@@ -65,6 +79,7 @@ def sync():
                 Add_Scheduler(output)
                 print(sched.get_jobs(), 'ConnectionError:same')
 
-
-sched.add_job(sync, 'interval', seconds=5)
-sched.start()
+if __name__ == "__main__":
+    sync_time()
+    sched.add_job(sync, 'interval', seconds=5)
+    sched.start()

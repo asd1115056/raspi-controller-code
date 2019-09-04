@@ -38,11 +38,24 @@ def Notify():
     u = p.getServiceByUUID(suuid)
     ch = u.getCharacteristics(cuuid)[0]
     desc = ch.getDescriptors()[0]
+    ch.write(bytes("t","ascii"))
     desc.write(b"\x01\x00", True)
     print("writing done")
-    while True:
-        if p.waitForNotifications(1.0):
-            continue
+    p.waitForNotifications(1.0)
+
+def ble_initialization():
+    try:
+        p = Peripheral(mac)
+        p.setDelegate(MyDelegate())
+        u = p.getServiceByUUID(suuid)
+        ch = u.getCharacteristics(cuuid)[0]
+        desc = ch.getDescriptors()[0]
+        desc.write(b"\x01\x00", True)
+        p.waitForNotifications(1.0)
+    except BTLEException:
+
+    finally:
+        P.disconnect()
 
 def sync_time():
     try:

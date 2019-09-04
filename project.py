@@ -7,7 +7,6 @@ import time
 import ntplib
 from RPLCD.i2c import CharLCD
 import sys
-import time
 import smbus2
 from bluepy.btle import *
 
@@ -27,7 +26,8 @@ class MyDelegate(DefaultDelegate):
         # ... initialise here
 
     def handleNotification(self, cHandle, data):
-        print(data)
+        global temp
+        temp=data.decode("ascii")
         # ... perhaps check cHandle
         # ... process 'data'
 
@@ -44,18 +44,34 @@ def Notify():
     p.waitForNotifications(1.0)
 
 def ble_initialization():
-    try:
-        p = Peripheral(mac)
-        p.setDelegate(MyDelegate())
-        u = p.getServiceByUUID(suuid)
-        ch = u.getCharacteristics(cuuid)[0]
-        desc = ch.getDescriptors()[0]
-        desc.write(b"\x01\x00", True)
-        p.waitForNotifications(1.0)
-    except BTLEException:
+    statue=True
+    while statue:
+        try:
+            p = Peripheral(mac)
+            p.setDelegate(MyDelegate())
+            u = p.getServiceByUUID(suuid)
+            ch = u.getCharacteristics(cuuid)[0]
+            desc = ch.getDescriptors()[0]
+            desc.write(b"\x01\x00", True)
+            ch.write(bytes("t","ascii"))
+            if p.waitForNotifications(1.0):
+                if temp=='ok':
+                    statue=False
+                    print("skip")
+        except BTLEException:
+            print("fail:wait for 40 sec")
 
-    finally:
-        P.disconnect()
+def net_initialization():
+    statue=True
+    global url1
+    while statue:
+        try:
+            response = requests.get(url1)
+            response.raise_for_status()
+            statue=False
+        except requests.exceptions.RequestException:
+            print("fail:wait for 40 sec")
+            time.sleep(40)
 
 def sync_time():
     try:

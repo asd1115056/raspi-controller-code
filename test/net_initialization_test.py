@@ -10,7 +10,7 @@ from RPLCD.i2c import CharLCD
 url1 = 'http://localhost:8000/ajax/all_list_Schedule'
 lcd = CharLCD('PCF8574', address=0x27, port=1, backlight_enabled=True)
 
-def net_initialization():
+def net_initializing():
     statue=True
     global url1
     while statue:
@@ -59,4 +59,4 @@ def net_initialization():
             lcd.clear()
 
 if __name__ == "__main__":
-    net_initialization()
+    net_initializing()

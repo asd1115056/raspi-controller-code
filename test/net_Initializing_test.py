@@ -14,7 +14,7 @@ def net_initializing():
     statue=True
     global url1
     while statue:
-        timer=10
+        timer=30
         dot=4
         lcd.clear()
         lcd.cursor_pos = (0, 0)
@@ -22,15 +22,15 @@ def net_initializing():
         lcd.cursor_pos = (1, 0)
         lcd.write_string("Net")
         while dot>0:
-          lcd.cursor_pos = (1, 3)
-          if dot==3:
-            lcd.write_string(".")
-          if dot==2:
-            lcd.write_string("..")
-          if dot==1:
-            lcd.write_string("...")
-          time.sleep(1)
-          dot-=1
+            lcd.cursor_pos = (1, 3)
+            if dot==3:
+              lcd.write_string(".")
+            if dot==2:
+              lcd.write_string("..")
+            if dot==1:
+              lcd.write_string("...")
+            time.sleep(1)
+            dot-=1
         try:
             response = requests.get(url1)
             response.raise_for_status()
@@ -45,16 +45,16 @@ def net_initializing():
             lcd.cursor_pos = (1, 0)
             lcd.write_string("Retry After")
             while timer>-1:
-              lcd.cursor_pos = (1,13)
-              lcd.write_string("  s")
-              if timer<10:
-                lcd.cursor_pos = (1,14)
-              else:
                 lcd.cursor_pos = (1,13)
-              lcd.write_string(str(timer))
-              #print(timer)
-              timer-=1
-              time.sleep(1)
+                lcd.write_string("  s")
+                if timer<10:
+                    lcd.cursor_pos = (1,14)
+                else:
+                    lcd.cursor_pos = (1,13)
+                lcd.write_string(str(timer))
+                #print(timer)
+                timer-=1
+                time.sleep(1)
         finally:
             lcd.clear()
 

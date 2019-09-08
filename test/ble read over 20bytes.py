@@ -85,8 +85,6 @@ if __name__ == '__main__':
         print(temp)
         print(count)
 
-        with open('test.txt', 'w') as f:
-            f.write(temp)
         ble_disconnect()
 
 

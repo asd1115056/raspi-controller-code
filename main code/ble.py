@@ -103,7 +103,7 @@ def ble_initializing():
         if device==False:
             lcd_print(1,0,"FAIL!          ")
             time.sleep(2)
-            lcd_countdown(1,30)
+            lcd_countdown(1,20)
         else:
             if ble("text")=="ok":
                 print ("ble_initializing:SUCESSFUL")
@@ -114,7 +114,7 @@ def ble_initializing():
                 print ("ble_initializing:FAIL")
                 lcd_print(1,0,"FAIL!       ")
                 time.sleep(2)
-                lcd_countdown(1,30)       
+                lcd_countdown(1,20)       
     lcd_clearall()
 
 if __name__ == "__main__":

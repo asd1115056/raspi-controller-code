@@ -6,13 +6,35 @@ import smbus2
 sys.modules['smbus'] = smbus2
 
 lcd = CharLCD('PCF8574', address=0x27, port=1, backlight_enabled=True)
-
+def lcd_clearall():
+    lcd.clear()
 def lcd_clearline(line):
     lcd.cursor_pos = (line, 0)
     lcd.write_string("                ")
 def lcd_print(line,postion,text):
     lcd.cursor_pos = (line, postion)
     lcd.write_string(text)
+def lcd_countdown(line,timer):
+    lcd_print(line,0,"Retry After")
+    while timer>-1:
+        lcd_print(line,13,"  s")
+        if timer<10:
+            lcd_print(line,14,str(timer))
+        else:
+            lcd_print(line,13,str(timer))
+        timer-=1
+        time.sleep(1)
+def lcd_dot(line,postion,long,timer):
+    begin=postion
+    while timer>-1:
+        lcd.cursor_pos = (line, postion)
+        lcd.write_string(".               ")
+        postion+=1
+        timer-=0.5 
+        time.sleep(0.5)
+        if postion-begin>long:
+            postion=begin
+
 
 if __name__ == "__main__":
     try:

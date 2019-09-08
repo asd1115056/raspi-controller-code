@@ -1,7 +1,7 @@
 #include <SoftwareSerial.h>   // 引用程式庫
 #include <string.h>
 int Input = 2;
-char data[]="[{'subject':'Math','score':80},{'subject':'Math','score':80},{'subject':'Math','score':80},{'subject':'Math','score':80},{'subject':'Math','score':80},{'subject':'Math','score':80},{'subject':'Math','score':80}]";
+char data[]="[{'subject':'Math','score':80},{'subject':'Math','score':80}]"
 // 定義連接藍牙模組的序列埠
 SoftwareSerial BT(8, 9); // 接收腳, 傳送腳
 char val;  // 儲存接收資料的變數
@@ -33,8 +33,6 @@ void loop() {
     BT.println("ok");
     Serial.println("ok");*/
       BT.print(data);
-      delay(50);
-      BT.print("/0");
       delay(50);
     }
   Serial.println(s);

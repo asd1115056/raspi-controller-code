@@ -1,0 +1,26 @@
+#include <SoftwareSerial.h>   // 引用程式庫
+#include <string.h>
+
+String s;  // 儲存接收資料的變數
+String s1="job 22bb336b 099";
+//char sr[];
+
+void setup() {
+  Serial.begin(9600);   // 與電腦序列埠連線
+  Serial.println("Serial is ready!");
+  Serial.println(s1.substring(0,3));
+  Serial.println(s1.substring(4,12));
+  Serial.println(s1.substring(13,16));
+  // 設定藍牙模組的連線速率
+  // 如果是HC-05，請改成38400
+
+}
+ 
+void loop() {
+  // 若收到「序列埠監控視窗」的資料，則送到藍牙模組
+
+  if (Serial.available()) {
+    s = Serial.readString();
+    Serial.println(s.length());
+  }
+}

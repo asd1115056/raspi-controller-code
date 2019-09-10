@@ -2,6 +2,10 @@
     "C_Cpp.errorSquiggles": "Enabled",
     "files.associations": {
         "*.ino": "c",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "cstddef": "c",
+        "initializer_list": "c",
+        "xstring": "c",
+        "xutility": "c"
     }
 }

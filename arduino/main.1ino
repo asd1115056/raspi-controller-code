@@ -26,7 +26,6 @@ void BT_interrupt() {
   Serial.println("interrupt");
 }*/
 void loop() {
-
   if (BT.available()) {
     BT_readString = BT.readString();
     Serial.println(BT_readString);

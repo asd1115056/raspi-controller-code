@@ -4,7 +4,6 @@
 int BT_statue_pin = 2;
 SoftwareSerial BT(8, 9); // rx,tx
 String BT_readString;
-
 String BT_readString_Part1;
 String BT_readString_Part2;
 String BT_readString_Part3; // 儲存接收資料的變數
@@ -50,7 +49,6 @@ void loop() {
     }
   }
   else{
-    Serial.println("hi");
 
 
 

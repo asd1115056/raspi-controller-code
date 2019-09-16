@@ -1,5 +1,6 @@
 {
-    "port": "COM6",
-    "board": "arduino:avr:uno",
-    "sketch": "arduino\\test\\rtc_sd.ino"
+    "port": "COM8",
+    "board": "arduino:avr:mega",
+    "sketch": "arduino\\test\\rtc3231.ino",
+    "configuration": "cpu=atmega2560"
 }

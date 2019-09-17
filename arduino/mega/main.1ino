@@ -24,31 +24,38 @@ String test_message2 = "upl"; // upload data
 String test_message3 = "add"; // add new Tag
 bool BT_statue = false;
 
-void RTC() {
-  pinMode(RtcSquareWavePin, INPUT);
+void RTC()
+{
+  pinMode(RtcSquareWavePin, INPUT_PULLUP);
   Rtc.Begin();
   RtcDateTime compiled = RtcDateTime(__DATE__, __TIME__);
 
-  if (!Rtc.IsDateTimeValid()) {
-    if (Rtc.LastError() != 0) {
+  if (!Rtc.IsDateTimeValid())
+  {
+    if (Rtc.LastError() != 0)
+    {
       // we have a communications error
       // see https://www.arduino.cc/en/Reference/WireEndTransmission for
       // what the number means
       Serial.print("RTC communications error = ");
       Serial.println(Rtc.LastError());
-    } else {
+    }
+    else
+    {
       Serial.println("RTC lost confidence in the DateTime!");
       Rtc.SetDateTime(compiled);
     }
   }
 
-  if (!Rtc.GetIsRunning()) {
+  if (!Rtc.GetIsRunning())
+  {
     Serial.println("RTC was not actively running, starting now");
     Rtc.SetIsRunning(true);
   }
 
   RtcDateTime now = Rtc.GetDateTime();
-  if (now < compiled) {
+  if (now < compiled)
+  {
     Serial.println("RTC is older than compile time!  (Updating DateTime)");
     Rtc.SetDateTime(compiled);
   }
@@ -66,15 +73,18 @@ void RTC() {
   // setup external interupt
   attachInterrupt(RtcSquareWaveInterrupt, InteruptServiceRoutine, FALLING);
 }
-void SD(){
+void SD()
+{
   Serial.print("initializing SD card...");
-  if (!SD.begin(4)) {
+  if (!SD.begin(4))
+  {
     Serial.println("Fail!");
     return;
   }
   Serial.println("initialized done");
 }
-void setup() {
+void setup()
+{
   Serial.begin(115200);
   Serial1.begin(115200);
   Serial2.begin(19200);
@@ -86,15 +96,18 @@ void setup() {
 }
 void InteruptServiceRoutine()
 {
-    // since this interupted any other running code,
-    // don't do anything that takes long and especially avoid
-    // any communications calls within this routine
-    interuptCount++;
-    interuptFlag = true;
+  // since this interupted any other running code,
+  // don't do anything that takes long and especially avoid
+  // any communications calls within this routine
+  interuptCount++;
+  interuptFlag = true;
 }
-void loop() {
-  if (BT_statue) {
-    if (Serial1.available()) {
+void loop()
+{
+  if (BT_statue)
+  {
+    if (Serial1.available())
+    {
       BT_readString = Serial1.readString();
       Serial.println(BT_readString);
       Serial1.print("ok");
@@ -103,75 +116,90 @@ void loop() {
       BT_readString_Part2 = BT_readString.substring(4, 12);
       BT_readString_Part3 = BT_readString.substring(13, 16);
       */
-      if (BT_readString.substring(0, 3) == "job") {
+      if (BT_readString.substring(0, 3) == "job")
+      {
         bool state = true;
-        while (state) {
-          Serial.println("job");
-          state = false;
-          //開啟rfid 蜂鳴器
-          //正確tag跳出迴圈+倒飼料
+        while (state)
+        {
+          TAG = "";
+          Serial2.write(searchCMD, 5);
+          delay(120);
+          if (Serial2.available())
+          {
+            Serial2.readBytes(searchRES, 10);
+            if (searchRES[0] == 0xaa && searchRES[3] != 0xdf)
+            {
+              for (int i = 0; i < 9; i++)
+              {
+                TAG += String(searchRES[i], HEX);
+              }
+              if (TAG.substring(7, 15) == BT_readString.substring(4, 12))
+              {
+                state = false;
+              }
+            }
+            //正確tag跳出迴圈+倒飼料
+          }
         }
       }
-      if (BT_readString.substring(0, 3) == "upl") {
+      if (BT_readString.substring(0, 3) == "upl")
+      {
         Serial.println("upl");
         //讀取sd 回傳
       }
-      if (BT_readString.substring(0, 3) == "add") {
+      if (BT_readString.substring(0, 3) == "add")
+      {
         Serial.println("add");
         //掃描卡片 回傳
       }
-    } else {
     }
   }
-  if (!BT_statue) {
+  if (!BT_statue)
+  {
     TAG = "";
     Serial2.write(searchCMD, 5);
     delay(120);
-    if (Serial2.available()) {
+    if (Serial2.available())
+    {
       Serial2.readBytes(searchRES, 10);
-      if (searchRES[0] == 0xaa && searchRES[3] != 0xdf) {
-        for (int i = 0; i < 9; i++) {
+      if (searchRES[0] == 0xaa && searchRES[3] != 0xdf)
+      {
+        for (int i = 0; i < 9; i++)
+        {
           TAG += String(searchRES[i], HEX);
         }
+        TAG = TAG.substring(7, 15);
       }
-      TAG = TAG.substring(7, 15);
+
       //測食量 飲水量 存入sd
     }
-    if (/*定時器中斷*/) {
+    if (Alarmed() && interuptCount % 2 == 0)
+    {
       //定時紀錄溫溼度 存入sd
     }
-  }
-}
-void gettag() {
-  TAG = "";
-  Serial2.write(searchCMD, 5);
-  delay(120);
-  if (Serial2.available()) {
-    Serial2.readBytes(searchRES, 10);
-    if (searchRES[0] == 0xaa && searchRES[3] != 0xdf) {
-      for (int i = 0; i < 9; i++) {
-        TAG += String(searchRES[i], HEX);
-      }
+    if (interuptCount > 9)
+    {
+      interuptCount = 0;
     }
-    TAG = TAG.substring(7, 15);
   }
 }
 bool Alarmed()
 {
-    bool wasAlarmed = false;
-    if (interuptFlag)  // check our flag that gets sets in the interupt
-    {
-        wasAlarmed = true;
-        interuptFlag = false; // reset the flag
-        
-        // this gives us which alarms triggered and
-        // then allows for others to trigger again
-        DS3231AlarmFlag flag = Rtc.LatchAlarmsTriggeredFlags();
+  bool wasAlarmed = false;
+  if (interuptFlag) // check our flag that gets sets in the interupt
+  {
+    wasAlarmed = true;
+    interuptFlag = false; // reset the flag
 
+    // this gives us which alarms triggered and
+    // then allows for others to trigger again
+    DS3231AlarmFlag flag = Rtc.LatchAlarmsTriggeredFlags();
+    /*
         if (flag & DS3231AlarmFlag_Alarm2)
         {
             Serial.println("alarm two triggered");
         }
-    }
-    return wasAlarmed;
+        */
+  }
+  return wasAlarmed;
 }

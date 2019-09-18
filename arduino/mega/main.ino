@@ -159,9 +159,26 @@ void loop() {
         }
         //倒飼料
       }
-      if (BT_readString.substring(0, 3) == "upl") {
+      if (BT_readString.substring(0, 3) == "upp") {
         //讀取sd 回傳
+        /*
         Serial.println("Send data by BLE");
+        myFile = SD.open("env.txt");
+        if (myFile) {
+          while (myFile.available()) {
+            Serial1.write(myFile.read());
+          }
+          myFile.close();
+          delay(50);
+          // SD.remove("env.txt");
+          Serial.println("done");
+        } else {
+          Serial.println("error opening file");
+        }*/
+      }
+      if (BT_readString.substring(0, 3) == "upe") {
+        //讀取sd 回傳
+        Serial.println("Send env data by BLE");
         myFile = SD.open("env.txt");
         if (myFile) {
           while (myFile.available()) {
@@ -189,6 +206,22 @@ void loop() {
             Serial1.print(TAG);
           }
         }
+      }
+      if (BT_readString.substring(0, 3) == "dlp" || BT_readString.substring(0, 3) == "dle") {
+        //讀取sd 回傳
+        Serial.println("Del file");
+        Serial.print("Del: ");
+        if (BT_readString.substring(0, 3) == "dlp") {
+          SD.remove("pet.txt");
+          Serial.print("pet.txt");
+        }
+        if (BT_readString.substring(0, 3) == "dle") {
+          SD.remove("env.txt");
+          Serial.print("env.txt");
+        }
+        Serial.println();
+        Serial1.print("Del:ok");
+        Serial.println("done");
       }
     }
     BT_statue = false;

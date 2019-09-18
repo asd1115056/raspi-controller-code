@@ -1,17 +1,17 @@
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
 #include <RtcDS3231.h>
 #include <SD.h>
 #include <SPI.h>
 #include <Time.h>
 #include <Wire.h> // must be included here so that Arduino library object file references work
 #include <string.h>
-#include <Adafruit_Sensor.h>
-#include <DHT.h>
-#include <DHT_U.h>
 
 RtcDS3231<TwoWire> Rtc(Wire);
 
 #define DHTPIN 22
-#define DHTTYPE    DHT11 
+#define DHTTYPE DHT11
 DHT_Unified dht(DHTPIN, DHTTYPE);
 
 #define RtcSquareWavePin 2       // Mega2560
@@ -21,6 +21,8 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 #define BTInterrupt 1 // Mega2560
 
 #define chipSelect 53
+
+#define location_code "A"
 
 volatile uint16_t interuptCount = 0;
 volatile bool interuptFlag = false;
@@ -93,9 +95,10 @@ void setup() {
   Serial.begin(115200);
   Serial1.begin(115200);
   Serial2.begin(19200);
+
+  SD1();
   dht.begin();
   RTC();
-  SD1();
   pinMode(BTPin, INPUT_PULLUP);
   attachInterrupt(BTInterrupt, BTRoutine, RISING);
   Serial.println("initializing RFID...Success!");
@@ -103,9 +106,7 @@ void setup() {
   Serial.println("initializing DHT...Success!");
   delay(100);
 }
-void BTRoutine() {
-  BT_statue = true;
-}
+void BTRoutine() { BT_statue = true; }
 void InteruptServiceRoutine() {
   // since this interupted any other running code,
   // don't do anything that takes long and especially avoid
@@ -114,8 +115,9 @@ void InteruptServiceRoutine() {
   interuptFlag = true;
 }
 void loop() {
+  sensors_event_t event;
   if (BT_statue) {
-    //Serial.println("HIGH");
+    // Serial.println("HIGH");
     if (Serial1.available()) {
       BT_readString = Serial1.readString();
       Serial.println(BT_readString);
@@ -171,7 +173,7 @@ void loop() {
     BT_statue = false;
   }
   if (!BT_statue) {
-    //Serial.println("LOW");
+    // Serial.println("LOW");
     TAG = "";
     Serial2.write(searchCMD, 5);
     delay(120);
@@ -187,6 +189,37 @@ void loop() {
     }
     if (Alarmed() && interuptCount % 2 == 0) {
       //定時紀錄溫溼度 存入sd
+      sensors_event_t event;
+      Serial.println("=================== Task =======================");
+      Serial.println("Alarm:Record env data");
+      myFile = SD.open("env.txt", FILE_WRITE);
+      if (myFile) {
+        myFile.print("E");
+        myFile.print(location_code);
+
+        RtcDateTime now = Rtc.GetDateTime();
+        myFile.print(now);
+
+        dht.temperature().getEvent(&event);
+        myFile.print(event.temperature);
+        Serial.print(F("Temperature: "));
+        Serial.print(event.temperature);
+        Serial.print(F("°C"));
+        Serial.print(" ");
+
+        dht.humidity().getEvent(&event);
+        myFile.print(event.relative_humidity);
+        Serial.print(F("Humidity: "));
+        Serial.print(event.relative_humidity);
+        Serial.println(F("%"));
+        delay(100);
+        myFile.println();
+        myFile.close();
+        Serial.println("done");
+      } else {
+        Serial.println("error opening file");
+      }
+        Serial.println("================= Finished =====================");
     }
     if (interuptCount > 9) {
       interuptCount = 0;

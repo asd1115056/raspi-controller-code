@@ -128,7 +128,7 @@ void loop() {
     Serial.println("=================== Task =======================");
     if (Serial1.available()) {
       BT_readString = Serial1.readString();
-      Serial.print("Pi Command: ");
+      Serial.print("BT:Pi Command: ");
       Serial.println(BT_readString);
       // Serial1.print("ok");
       /*
@@ -179,6 +179,8 @@ void loop() {
       if (BT_readString.substring(0, 3) == "upe") {
         //讀取sd 回傳
         Serial.println("Send env data by BLE");
+        RtcDateTime now = Rtc.GetDateTime();
+        printDateTime(now);
         myFile = SD.open("env.txt");
         if (myFile) {
           while (myFile.available()) {
@@ -207,9 +209,12 @@ void loop() {
           }
         }
       }
-      if (BT_readString.substring(0, 3) == "dlp" || BT_readString.substring(0, 3) == "dle") {
+      if (BT_readString.substring(0, 3) == "dlp" ||
+          BT_readString.substring(0, 3) == "dle") {
         //讀取sd 回傳
         Serial.println("Del file");
+        RtcDateTime now = Rtc.GetDateTime();
+        printDateTime(now);
         Serial.print("Del: ");
         if (BT_readString.substring(0, 3) == "dlp") {
           SD.remove("pet.txt");
@@ -229,14 +234,11 @@ void loop() {
     Serial.println();
   }
   if (!BT_statue) {
-    // Serial.println("LOW");
-    if (digitalRead(RFID_statue_pin) == LOW) {
-      // J1-7 有卡 輸出低電位
-      RFID_statue = true;
-    }
     if (RFID_statue) {
       Serial.println("=================== Task =======================");
-      Serial.println("Record pet data");
+      Serial.println("RFID:Record pet data");
+      RtcDateTime now = Rtc.GetDateTime();
+      printDateTime(now);
       TAG = "";
       Serial2.write(searchCMD, 5);
       delay(120);
@@ -267,6 +269,7 @@ void loop() {
 
         RtcDateTime now = Rtc.GetDateTime();
         myFile.print(now);
+        printDateTime(now);
 
         dht.temperature().getEvent(&event);
         myFile.print(event.temperature);
@@ -274,7 +277,7 @@ void loop() {
         Serial.print(event.temperature);
         Serial.print(F("°C"));
 
-        Serial.print(" ");
+        Serial.println(" ");
 
         dht.humidity().getEvent(&event);
         myFile.print(event.relative_humidity);
@@ -297,6 +300,10 @@ void loop() {
       interuptCount = 0;
     }
   }
+  if (digitalRead(RFID_statue_pin) == LOW) {
+    // J1-7 有卡 輸出低電位
+    RFID_statue = true;
+  }
 }
 
 bool Alarmed() {
@@ -317,4 +324,14 @@ bool Alarmed() {
         */
   }
   return wasAlarmed;
+}
+#define countof(a) (sizeof(a) / sizeof(a[0]))
+
+void printDateTime(const RtcDateTime &dt) {
+  char datestring[20];
+
+  snprintf_P(datestring, countof(datestring),
+             PSTR("%04u-%02u-%02u %02u:%02u:%02u"), dt.Year(), dt.Month(),
+             dt.Day(), dt.Hour(), dt.Minute(), dt.Second());
+  Serial.println(datestring);
 }

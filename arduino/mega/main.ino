@@ -23,17 +23,20 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 #define chipSelect 53
 
 #define location_code "A"
+#define RFID_statue_pin 4
 
 volatile uint16_t interuptCount = 0;
 volatile bool interuptFlag = false;
 unsigned char searchCMD[5] = {0xAA, 0xBB, 0x02, 0x20, 0x22};
 unsigned char searchRES[10];
+
 String TAG = "";
 String BT_readString;
 String test_message1 = "job 22bb336b 099";
 String test_message2 = "upl"; // upload data
 String test_message3 = "add"; // add new Tag
 bool BT_statue = false;
+bool RFID_statue = false;
 
 File myFile;
 Sd2Card card;
@@ -100,13 +103,17 @@ void setup() {
   dht.begin();
   RTC();
   pinMode(BTPin, INPUT_PULLUP);
+  pinMode(RFID_statue_pin, INPUT);
   attachInterrupt(BTInterrupt, BTRoutine, RISING);
   Serial.println("initializing RFID...Success!");
   Serial.println("initializing BT...Success!");
   Serial.println("initializing DHT...Success!");
   delay(100);
 }
-void BTRoutine() { BT_statue = true; }
+void BTRoutine() {
+  //
+  BT_statue = true;
+}
 void InteruptServiceRoutine() {
   // since this interupted any other running code,
   // don't do anything that takes long and especially avoid
@@ -118,8 +125,10 @@ void loop() {
   sensors_event_t event;
   if (BT_statue) {
     // Serial.println("HIGH");
+    Serial.println("=================== Task =======================");
     if (Serial1.available()) {
       BT_readString = Serial1.readString();
+      Serial.print("Pi Command: ");
       Serial.println(BT_readString);
       // Serial1.print("ok");
       /*
@@ -151,8 +160,20 @@ void loop() {
         //倒飼料
       }
       if (BT_readString.substring(0, 3) == "upl") {
-        Serial.println("upl");
         //讀取sd 回傳
+        Serial.println("Send data by BLE");
+        myFile = SD.open("env.txt");
+        if (myFile) {
+          while (myFile.available()) {
+            Serial1.write(myFile.read());
+          }
+          myFile.close();
+          delay(50);
+          // SD.remove("env.txt");
+          Serial.println("done");
+        } else {
+          Serial.println("error opening file");
+        }
       }
       if (BT_readString.substring(0, 3) == "add") {
         TAG = "";
@@ -171,21 +192,35 @@ void loop() {
       }
     }
     BT_statue = false;
+    Serial.println("================= Finished =====================");
+    Serial.println();
   }
   if (!BT_statue) {
     // Serial.println("LOW");
-    TAG = "";
-    Serial2.write(searchCMD, 5);
-    delay(120);
-    if (Serial2.available()) {
-      Serial2.readBytes(searchRES, 10);
-      if (searchRES[0] == 0xaa && searchRES[3] != 0xdf) {
-        for (int i = 0; i < 9; i++) {
-          TAG += String(searchRES[i], HEX);
+    if (digitalRead(RFID_statue_pin) == LOW) {
+      // J1-7 有卡 輸出低電位
+      RFID_statue = true;
+    }
+    if (RFID_statue) {
+      Serial.println("=================== Task =======================");
+      Serial.println("Record pet data");
+      TAG = "";
+      Serial2.write(searchCMD, 5);
+      delay(120);
+      if (Serial2.available()) {
+        Serial2.readBytes(searchRES, 10);
+        if (searchRES[0] == 0xaa && searchRES[3] != 0xdf) {
+          for (int i = 0; i < 9; i++) {
+            TAG += String(searchRES[i], HEX);
+          }
+          TAG = TAG.substring(7, 15);
+          Serial.print("Tag: ");
+          Serial.println(TAG);
         }
-        TAG = TAG.substring(7, 15);
       }
-      //測食量 飲水量 存入sd
+      RFID_statue = false;
+      Serial.println("================= Finished =====================");
+      Serial.println();
     }
     if (Alarmed() && interuptCount % 2 == 0) {
       //定時紀錄溫溼度 存入sd
@@ -205,6 +240,7 @@ void loop() {
         Serial.print(F("Temperature: "));
         Serial.print(event.temperature);
         Serial.print(F("°C"));
+
         Serial.print(" ");
 
         dht.humidity().getEvent(&event);
@@ -212,16 +248,19 @@ void loop() {
         Serial.print(F("Humidity: "));
         Serial.print(event.relative_humidity);
         Serial.println(F("%"));
+
         delay(100);
+
         myFile.println();
         myFile.close();
         Serial.println("done");
       } else {
         Serial.println("error opening file");
       }
-        Serial.println("================= Finished =====================");
+      Serial.println("================= Finished =====================");
+      Serial.println();
     }
-    if (interuptCount > 9) {
+    if (interuptCount > 8) {
       interuptCount = 0;
     }
   }

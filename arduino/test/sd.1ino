@@ -9,18 +9,18 @@ Sd2Card card;
 SdVolume volume;
 SdFile root;
 
-const int chipSelect = 4;
+const int chipSelect = 53;
 
 void setup() {
 
-  Serial.begin(9600);  // 開啟通訊串列埠開啟
+  Serial.begin(115200);  // 開啟通訊串列埠開啟
   while (!Serial) {    // 等待串列埠連線
   }
 
   //----------- 寫入檔案
   Serial.print("\nWaiting for SD card ready...");
 
-  if (!SD.begin(4)) {
+  if (!SD.begin(53)) {
     Serial.println("Fail!");
     return;
   }

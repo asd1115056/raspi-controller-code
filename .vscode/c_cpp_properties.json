@@ -6,7 +6,10 @@
                 "C:\\Program Files (x86)\\Arduino\\tools\\**",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\**",
                 "D:\\黃柏翰\\Documents\\Arduino\\libraries\\**",
-                "${workspaceFolder}/** "
+                "${workspaceFolder}/** ",
+                "D:\\黃柏翰\\Documents\\Arduino\\libraries\\SimpleDHT\\**",
+                "D:\\黃柏翰\\Documents\\Arduino\\libraries\\DHT_sensor_library\\**",
+                "D:\\黃柏翰\\Documents\\Arduino\\libraries\\Adafruit_Unified_Sensor\\**"
             ],
             "defines": [
                 "_DEBUG",

@@ -1,6 +1,6 @@
 {
     "port": "COM8",
     "board": "arduino:avr:mega",
-    "sketch": "arduino\\test\\rtc3231.ino",
+    "sketch": "arduino\\test\\DHT11.ino",
     "configuration": "cpu=atmega2560"
 }

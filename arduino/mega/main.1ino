@@ -4,12 +4,22 @@
 #include <Time.h>
 #include <Wire.h> // must be included here so that Arduino library object file references work
 #include <string.h>
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
 
 RtcDS3231<TwoWire> Rtc(Wire);
 
-File dataFile;
+#define DHTPIN 22
+#define DHTTYPE    DHT11 
+DHT_Unified dht(DHTPIN, DHTTYPE);
+
 #define RtcSquareWavePin 2       // Mega2560
 #define RtcSquareWaveInterrupt 0 // Mega2560
+
+#define BTPin 3       // Mega2560
+#define BTInterrupt 1 // Mega2560
+
 #define chipSelect 53
 
 volatile uint16_t interuptCount = 0;
@@ -17,45 +27,42 @@ volatile bool interuptFlag = false;
 unsigned char searchCMD[5] = {0xAA, 0xBB, 0x02, 0x20, 0x22};
 unsigned char searchRES[10];
 String TAG = "";
-int BT_statue_pin = 2;
 String BT_readString;
 String test_message1 = "job 22bb336b 099";
 String test_message2 = "upl"; // upload data
 String test_message3 = "add"; // add new Tag
 bool BT_statue = false;
 
-void RTC()
-{
+File myFile;
+Sd2Card card;
+SdVolume volume;
+SdFile root;
+
+void RTC() {
   pinMode(RtcSquareWavePin, INPUT_PULLUP);
   Rtc.Begin();
   RtcDateTime compiled = RtcDateTime(__DATE__, __TIME__);
 
-  if (!Rtc.IsDateTimeValid())
-  {
-    if (Rtc.LastError() != 0)
-    {
+  if (!Rtc.IsDateTimeValid()) {
+    if (Rtc.LastError() != 0) {
       // we have a communications error
       // see https://www.arduino.cc/en/Reference/WireEndTransmission for
       // what the number means
       Serial.print("RTC communications error = ");
       Serial.println(Rtc.LastError());
-    }
-    else
-    {
+    } else {
       Serial.println("RTC lost confidence in the DateTime!");
       Rtc.SetDateTime(compiled);
     }
   }
 
-  if (!Rtc.GetIsRunning())
-  {
+  if (!Rtc.GetIsRunning()) {
     Serial.println("RTC was not actively running, starting now");
     Rtc.SetIsRunning(true);
   }
 
   RtcDateTime now = Rtc.GetDateTime();
-  if (now < compiled)
-  {
+  if (now < compiled) {
     Serial.println("RTC is older than compile time!  (Updating DateTime)");
     Rtc.SetDateTime(compiled);
   }
@@ -72,119 +79,122 @@ void RTC()
 
   // setup external interupt
   attachInterrupt(RtcSquareWaveInterrupt, InteruptServiceRoutine, FALLING);
+  Serial.println("initializing RTC...Success!");
 }
-void SD()
-{
+void SD1() {
   Serial.print("initializing SD card...");
-  if (!SD.begin(4))
-  {
+  if (!SD.begin(53)) {
     Serial.println("Fail!");
     return;
   }
-  Serial.println("initialized done");
+  Serial.println("Success!");
 }
-void setup()
-{
+void setup() {
   Serial.begin(115200);
   Serial1.begin(115200);
   Serial2.begin(19200);
+  dht.begin();
   RTC();
-  SD();
-  Serial.println("RFID is ready!");
-  Serial.println("BT is ready!");
+  SD1();
+  pinMode(BTPin, INPUT_PULLUP);
+  attachInterrupt(BTInterrupt, BTRoutine, RISING);
+  Serial.println("initializing RFID...Success!");
+  Serial.println("initializing BT...Success!");
+  Serial.println("initializing DHT...Success!");
   delay(100);
 }
-void InteruptServiceRoutine()
-{
+void BTRoutine() {
+  BT_statue = true;
+}
+void InteruptServiceRoutine() {
   // since this interupted any other running code,
   // don't do anything that takes long and especially avoid
   // any communications calls within this routine
   interuptCount++;
   interuptFlag = true;
 }
-void loop()
-{
-  if (BT_statue)
-  {
-    if (Serial1.available())
-    {
+void loop() {
+  if (BT_statue) {
+    //Serial.println("HIGH");
+    if (Serial1.available()) {
       BT_readString = Serial1.readString();
       Serial.println(BT_readString);
-      Serial1.print("ok");
+      // Serial1.print("ok");
       /*
       BT_readString_Part1 = BT_readString.substring(0, 3);
       BT_readString_Part2 = BT_readString.substring(4, 12);
       BT_readString_Part3 = BT_readString.substring(13, 16);
       */
-      if (BT_readString.substring(0, 3) == "job")
-      {
+      if (BT_readString == "test") {
+        Serial1.print("ok");
+      }
+      if (BT_readString.substring(0, 3) == "job") {
         bool state = true;
-        while (state)
-        {
+        while (state) {
           TAG = "";
           Serial2.write(searchCMD, 5);
           delay(120);
-          if (Serial2.available())
-          {
+          if (Serial2.available()) {
             Serial2.readBytes(searchRES, 10);
-            if (searchRES[0] == 0xaa && searchRES[3] != 0xdf)
-            {
-              for (int i = 0; i < 9; i++)
-              {
+            if (searchRES[0] == 0xaa && searchRES[3] != 0xdf) {
+              for (int i = 0; i < 9; i++) {
                 TAG += String(searchRES[i], HEX);
               }
-              if (TAG.substring(7, 15) == BT_readString.substring(4, 12))
-              {
+              if (TAG.substring(7, 15) == BT_readString.substring(4, 12)) {
                 state = false;
               }
             }
-            //正確tag跳出迴圈+倒飼料
           }
         }
+        //倒飼料
       }
-      if (BT_readString.substring(0, 3) == "upl")
-      {
+      if (BT_readString.substring(0, 3) == "upl") {
         Serial.println("upl");
         //讀取sd 回傳
       }
-      if (BT_readString.substring(0, 3) == "add")
-      {
-        Serial.println("add");
-        //掃描卡片 回傳
+      if (BT_readString.substring(0, 3) == "add") {
+        TAG = "";
+        Serial2.write(searchCMD, 5);
+        delay(120);
+        if (Serial2.available()) {
+          Serial2.readBytes(searchRES, 10);
+          if (searchRES[0] == 0xaa && searchRES[3] != 0xdf) {
+            for (int i = 0; i < 9; i++) {
+              TAG += String(searchRES[i], HEX);
+            }
+            TAG = TAG.substring(7, 15);
+            Serial1.print(TAG);
+          }
+        }
       }
     }
+    BT_statue = false;
   }
-  if (!BT_statue)
-  {
+  if (!BT_statue) {
+    //Serial.println("LOW");
     TAG = "";
     Serial2.write(searchCMD, 5);
     delay(120);
-    if (Serial2.available())
-    {
+    if (Serial2.available()) {
       Serial2.readBytes(searchRES, 10);
-      if (searchRES[0] == 0xaa && searchRES[3] != 0xdf)
-      {
-        for (int i = 0; i < 9; i++)
-        {
+      if (searchRES[0] == 0xaa && searchRES[3] != 0xdf) {
+        for (int i = 0; i < 9; i++) {
           TAG += String(searchRES[i], HEX);
         }
         TAG = TAG.substring(7, 15);
       }
-
       //測食量 飲水量 存入sd
     }
-    if (Alarmed() && interuptCount % 2 == 0)
-    {
+    if (Alarmed() && interuptCount % 2 == 0) {
       //定時紀錄溫溼度 存入sd
     }
-    if (interuptCount > 9)
-    {
+    if (interuptCount > 9) {
       interuptCount = 0;
     }
   }
 }
-bool Alarmed()
-{
+
+bool Alarmed() {
   bool wasAlarmed = false;
   if (interuptFlag) // check our flag that gets sets in the interupt
   {

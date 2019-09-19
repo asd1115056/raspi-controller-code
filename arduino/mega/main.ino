@@ -84,10 +84,10 @@ void RTC() {
 
   // setup external interupt
   attachInterrupt(RtcSquareWaveInterrupt, InteruptServiceRoutine, FALLING);
-  Serial.println("initializing RTC...Success!");
+  Serial.println("RTC...Success!");
 }
 void SD1() {
-  Serial.print("initializing SD card...");
+  Serial.print("SD card...");
   if (!SD.begin(53)) {
     Serial.println("Fail!");
     return;
@@ -98,17 +98,17 @@ void setup() {
   Serial.begin(115200);
   Serial1.begin(115200);
   Serial2.begin(19200);
-
+  Serial.println("=============== Initializing ===================");
   SD1();
   dht.begin();
   RTC();
   pinMode(BTPin, INPUT_PULLUP);
   pinMode(RFID_statue_pin, INPUT);
   attachInterrupt(BTInterrupt, BTRoutine, RISING);
-  Serial.println("initializing RFID...Success!");
-  Serial.println("initializing BT...Success!");
-  Serial.println("initializing DHT...Success!");
-  delay(100);
+  Serial.println("RFID...Success!");
+  Serial.println("BLE...Success!");
+  Serial.println("DHT11...Success!");
+  Serial.println("================= Finished =====================");
 }
 void BTRoutine() {
   //

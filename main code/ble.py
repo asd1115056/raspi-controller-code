@@ -62,7 +62,7 @@ def ble_data(send):
         # wait notification
         count=0
         while True:
-             if  ble_conn.waitForNotifications(1.0):
+             if  ble_conn.waitForNotifications(5.0):
                   locals()['X%s' % (count)]=output
                   count+=1 
                   continue
@@ -78,6 +78,7 @@ def ble_data(send):
 def ble(text):
     global ble_mac
     ble_connect(ble_mac)
+    time.sleep(0.025)
     temp=ble_data(text)
     ble_disconnect()
     return temp

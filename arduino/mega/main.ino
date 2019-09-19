@@ -31,10 +31,8 @@ unsigned char searchCMD[5] = {0xAA, 0xBB, 0x02, 0x20, 0x22};
 unsigned char searchRES[10];
 
 String TAG = "";
-String BT_readString;
-String test_message1 = "job 22bb336b 099";
-String test_message2 = "upl"; // upload data
-String test_message3 = "add"; // add new Tag
+String BT_readString="";
+//String test_message1 = "job22bb336b099.9";
 bool BT_statue = false;
 bool RFID_statue = false;
 
@@ -132,14 +130,14 @@ void loop() {
       Serial.println(BT_readString);
       // Serial1.print("ok");
       /*
-      BT_readString_Part1 = BT_readString.substring(0, 3);
-      BT_readString_Part2 = BT_readString.substring(4, 12);
-      BT_readString_Part3 = BT_readString.substring(13, 16);
+      BT_readString_Part1 = BT_readString.substring(0, 2);
+      BT_readString_Part2 = BT_readString.substring(3, 10);
+      BT_readString_Part3 = BT_readString.substring(11, 14);
       */
       if (BT_readString == "test") {
         Serial1.print("ok");
       }
-      if (BT_readString.substring(0, 3) == "job") {
+      if (BT_readString.substring(0, 2) == "job") {
         bool state = true;
         while (state) {
           TAG = "";
@@ -151,7 +149,7 @@ void loop() {
               for (int i = 0; i < 9; i++) {
                 TAG += String(searchRES[i], HEX);
               }
-              if (TAG.substring(7, 15) == BT_readString.substring(4, 12)) {
+              if (TAG.substring(7, 15) == BT_readString.substring(3, 10)) {
                 state = false;
               }
             }
@@ -159,7 +157,7 @@ void loop() {
         }
         //倒飼料
       }
-      if (BT_readString.substring(0, 3) == "upp") {
+      if (BT_readString.substring(0, 2) == "upp") {
         //讀取sd 回傳
         Serial.println("Send pet data by BLE");
         RtcDateTime now = Rtc.GetDateTime();
@@ -176,7 +174,7 @@ void loop() {
           Serial.println("error opening file");
         }
       }
-      if (BT_readString.substring(0, 3) == "upe") {
+      if (BT_readString.substring(0,2) == "upe") {
         //讀取sd 回傳
         Serial.println("Send env data by BLE");
         RtcDateTime now = Rtc.GetDateTime();
@@ -193,18 +191,18 @@ void loop() {
           Serial.println("error opening file");
         }
       }
-      if (BT_readString.substring(0, 3) == "dlp" ||
-          BT_readString.substring(0, 3) == "dle") {
+      if (BT_readString.substring(0, 2) == "dlp" ||
+          BT_readString.substring(0, 2) == "dle") {
         //讀取sd 回傳
         Serial.println("Del file");
         RtcDateTime now = Rtc.GetDateTime();
         printDateTime(now);
         Serial.print("Del: ");
-        if (BT_readString.substring(0, 3) == "dlp") {
+        if (BT_readString.substring(0, 2) == "dlp") {
           SD.remove("pet.txt");
           Serial.print("pet.txt");
         }
-        if (BT_readString.substring(0, 3) == "dle") {
+        if (BT_readString.substring(0, 2) == "dle") {
           SD.remove("env.txt");
           Serial.print("env.txt");
         }

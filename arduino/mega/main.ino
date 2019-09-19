@@ -194,21 +194,6 @@ void loop() {
           Serial.println("error opening file");
         }
       }
-      if (BT_readString.substring(0, 3) == "add") {
-        TAG = "";
-        Serial2.write(searchCMD, 5);
-        delay(120);
-        if (Serial2.available()) {
-          Serial2.readBytes(searchRES, 10);
-          if (searchRES[0] == 0xaa && searchRES[3] != 0xdf) {
-            for (int i = 0; i < 9; i++) {
-              TAG += String(searchRES[i], HEX);
-            }
-            TAG = TAG.substring(7, 15);
-            Serial1.print(TAG);
-          }
-        }
-      }
       if (BT_readString.substring(0, 3) == "dlp" ||
           BT_readString.substring(0, 3) == "dle") {
         //讀取sd 回傳
@@ -257,7 +242,7 @@ void loop() {
       Serial.println("================= Finished =====================");
       Serial.println();
     }
-    if (Alarmed() && interuptCount % 2 == 0) {
+    if (Alarmed() && interuptCount % 3 == 0) {
       //定時紀錄溫溼度 存入sd
       sensors_event_t event;
       Serial.println("=================== Task =======================");

@@ -53,23 +53,23 @@ def sync():
         if count == 0:
             Add_Scheduler(new)
             print(sched.get_jobs(), 'Connection:first')
-            with open('Scheduler_save.text', 'w') as f:
+            with open('Scheduler_save.txt', 'w') as f:
                 f.write(str(new))
             count = 1
         else:
-            with open('Scheduler_save.text', 'r') as f:
+            with open('Scheduler_save.txt', 'r') as f:
                 output = eval(f.readline())
             if new != output:
                 delete_Scheduler(len(output))
                 Add_Scheduler(new)
                 print(sched.get_jobs(), 'Connection:change')
-                with open('Scheduler_save.text', 'w') as f:
+                with open('Scheduler_save.txt', 'w') as f:
                     f.write(str(new))
             else:
                 print(sched.get_jobs(), 'Connection:same')
     except requests.exceptions.RequestException:
         try:
-            with open('Scheduler_save.text', 'r') as f:
+            with open('Scheduler_save.txt', 'r') as f:
                 output = eval(f.readline())
         except IOError:
             print("Error: 没有找到文件或读取文件失败(ConnectionError)")

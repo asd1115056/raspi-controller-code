@@ -161,20 +161,20 @@ void loop() {
       }
       if (BT_readString.substring(0, 3) == "upp") {
         //讀取sd 回傳
-        /*
-        Serial.println("Send data by BLE");
-        myFile = SD.open("env.txt");
+        Serial.println("Send pet data by BLE");
+        RtcDateTime now = Rtc.GetDateTime();
+        printDateTime(now);
+        myFile = SD.open("pet.txt");
         if (myFile) {
           while (myFile.available()) {
             Serial1.write(myFile.read());
           }
           myFile.close();
           delay(50);
-          // SD.remove("env.txt");
           Serial.println("done");
         } else {
           Serial.println("error opening file");
-        }*/
+        }
       }
       if (BT_readString.substring(0, 3) == "upe") {
         //讀取sd 回傳
@@ -188,7 +188,6 @@ void loop() {
           }
           myFile.close();
           delay(50);
-          // SD.remove("env.txt");
           Serial.println("done");
         } else {
           Serial.println("error opening file");

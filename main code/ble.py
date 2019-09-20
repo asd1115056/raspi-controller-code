@@ -51,7 +51,7 @@ def ble_scan():
             print ("ble_scan:DEVICE NO FOUND")
             return False
 
-def ble_data(send): 
+def ble_data(send,timeout): 
         global ble_conn,output,write_uuid,notify_uuid
         # write , set listen
         w = ble_conn.getCharacteristics(uuid=write_uuid)[0]
@@ -62,7 +62,7 @@ def ble_data(send):
         # wait notification
         count=0
         while True:
-             if  ble_conn.waitForNotifications(5.0):
+             if  ble_conn.waitForNotifications(timeout):
                   locals()['X%s' % (count)]=output
                   count+=1 
                   continue
@@ -75,11 +75,11 @@ def ble_data(send):
         #print(count)
         return temp
 
-def ble(text):
+def ble(text,timeout):
     global ble_mac
     ble_connect(ble_mac)
     time.sleep(0.025)
-    temp=ble_data(text)
+    temp=ble_data(text,timeout)
     ble_disconnect()
     return temp
 
@@ -120,5 +120,5 @@ def ble_initializing():
 
 if __name__ == "__main__":
     ble_initializing()
-    #print (ble("test"))
+    print (ble("test",5))
    

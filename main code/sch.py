@@ -39,6 +39,8 @@ def delete_Scheduler(x):
 
 def task(a, b):
     print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), a, b)
+def task1():
+    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 
 def sync():
@@ -87,4 +89,5 @@ def sync():
 if __name__ == "__main__":
     sync_time()
     sched.add_job(sync, 'interval', seconds=5)
+    sched.add_job(task1, 'interval', seconds=10)
     sched.start()

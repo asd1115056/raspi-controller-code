@@ -44,12 +44,24 @@ def task(a, b):
 
 def BT_sync():
     print ("BT_sync: begin")
-    env_temp=ble("upe")
-    if env_temp != "":
+    flag=True
+    count=0
+    while flag:
+        env_temp=ble("upe")
+        if env_temp != "":
+            flag=False
+        else:
+            print ("BT_sync fail!"+ " Retry "+ str(count) +" time")
+            time.sleep(30)
+        count+=1
+        if count>3:
+            print ("BT_sync fail!"+ " timeout")
+            break
+    if count<3 and env_temp !="":
         f = open('env.txt','w')
         print(env_temp, file = f)
         f.close()
-        time.sleep(1)
+        time.sleep(5)
         env_temp=ble("dle")
         if env_temp=="Del:ok":
             print ("BT_sync: done")

@@ -34,6 +34,7 @@ def ble_connect(devAddr):
 def ble_disconnect():
     global ble_conn
     ble_conn.disconnect()
+    ble_conn=None
     print("disconnected")
 
 def ble_scan():
@@ -51,18 +52,18 @@ def ble_scan():
             print ("ble_scan:DEVICE NO FOUND")
             return False
 
-def ble_data(send,timeout): 
+def ble_data(send): 
         global ble_conn,output,write_uuid,notify_uuid
         # write , set listen
         w = ble_conn.getCharacteristics(uuid=write_uuid)[0]
         w.write(bytes(send,"UTF-8"))
-        time.sleep(0.05)
+        #time.sleep(0.05)
         n = ble_conn.getCharacteristics(uuid=notify_uuid)[0]
         ble_conn.writeCharacteristic(n.valHandle+1, b"\x01\x00",True)
         # wait notification
         count=0
         while True:
-             if  ble_conn.waitForNotifications(timeout):
+             if  ble_conn.waitForNotifications(5.0):
                   locals()['X%s' % (count)]=output
                   count+=1 
                   continue
@@ -75,11 +76,11 @@ def ble_data(send,timeout):
         #print(count)
         return temp
 
-def ble(text,timeout):
+def ble(text):
     global ble_mac
     ble_connect(ble_mac)
     time.sleep(0.025)
-    temp=ble_data(text,timeout)
+    temp=ble_data(text)
     ble_disconnect()
     return temp
 
@@ -106,7 +107,7 @@ def ble_initializing():
             time.sleep(2)
             lcd_countdown(1,20)
         else:
-            if ble("text")=="ok":
+            if ble("test")=="ok":
                 print ("ble_initializing:SUCESSFUL")
                 lcd_print(1,0,"OK!        ")
                 time.sleep(2)
@@ -120,5 +121,5 @@ def ble_initializing():
 
 if __name__ == "__main__":
     ble_initializing()
-    print (ble("test",5))
+    print (ble("test"))
    

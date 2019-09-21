@@ -1,18 +1,17 @@
 from lcd import *
 import requests
 
-url1 = 'http://localhost:8000/ajax/all_list_Schedule'
+url = 'http://localhost:8000/ajax/all_list_Schedule'
 
-def net_initializing():
+def net_initializing(url):
     statue=True
-    global url1
     while statue:
         lcd_clearall()
         lcd_print(0,0,"Net Initializing")
         lcd_print(1,0,"connect.....   ")
         time.sleep(2)
         try:
-            response = requests.get(url1)
+            response = requests.get(url)
             response.raise_for_status()
             lcd_print(1,0,"OK!          ")
             time.sleep(2)
@@ -25,4 +24,4 @@ def net_initializing():
 
 
 if __name__ == "__main__":
-    net_initializing()
+    net_initializing(url)

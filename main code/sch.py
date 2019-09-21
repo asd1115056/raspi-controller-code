@@ -1,12 +1,14 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
 from datetime import datetime
+from ble import *
+from net import *
 import requests
 import ntplib
 import time
 import os
 import json
 
-url1 = 'http://localhost:8000/ajax/all_list_Schedule'
+url = 'http://localhost:8000/ajax/all_list_Schedule'
 sched = BlockingScheduler()
 count = 0
 
@@ -39,15 +41,25 @@ def delete_Scheduler(x):
 
 def task(a, b):
     print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), a, b)
-def task1():
-    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+def BT_sync():
+    print ("BT_sync: begin")
+    env_temp=ble("upe")
+    if env_temp != "":
+        f = open('env.txt','w')
+        print(env_temp, file = f)
+        f.close()
+        time.sleep(1)
+        env_temp=ble("dle")
+        if env_temp=="Del:ok":
+            print ("BT_sync: done")
 
 
-def sync():
-    global url1, sched, count
+def sync(url):
+    global sched, count
     new = []
     try:
-        response = requests.get(url1)
+        response = requests.get(url)
         response.raise_for_status()
         r = json.loads(response.text)
         for di in r:
@@ -74,7 +86,7 @@ def sync():
             with open('Scheduler_save.txt', 'r') as f:
                 output = eval(f.readline())
         except IOError:
-            print("Error: 没有找到文件或读取文件失败(ConnectionError)")
+            print("Error: file no find or can not read")
         else:
             if count == 0:
                 Add_Scheduler(output)
@@ -87,7 +99,9 @@ def sync():
 
 
 if __name__ == "__main__":
-    sync_time()
-    sched.add_job(sync, 'interval', seconds=5)
-    sched.add_job(task1, 'interval', seconds=10)
-    sched.start()
+    #sync_time()
+    #sched.add_job(sync, 'interval', seconds=5,args=[url])
+    #sched.add_job(task1, 'interval', seconds=10)
+    sched.add_job(BT_sync, 'interval', seconds=10)
+    #sched.start()
+    #pass

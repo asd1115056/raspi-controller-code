@@ -1,7 +1,7 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
 from datetime import datetime
-from ble import *
-from net import *
+#from ble import *
+#from net import *
 import requests
 import ntplib
 import time
@@ -65,7 +65,16 @@ def BT_sync():
         env_temp=ble("dle")
         if env_temp=="Del:ok":
             print ("BT_sync: done")
-
+def BT_update():
+    count=0
+    f=open("env.txt")
+    while True:
+        line = f.readline()
+        count+=1
+        if len(line)==22: 
+            print(str(count)+"  "+line)
+        else:
+            break
 
 def sync(url):
     global sched, count
@@ -114,6 +123,7 @@ if __name__ == "__main__":
     #sync_time()
     #sched.add_job(sync, 'interval', seconds=5,args=[url])
     #sched.add_job(task1, 'interval', seconds=10)
-    sched.add_job(BT_sync, 'interval', seconds=10)
+    #sched.add_job(BT_sync, 'interval', seconds=10)
+    BT_update()
     #sched.start()
     #pass

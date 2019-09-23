@@ -1,13 +1,14 @@
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 #include <DHT_U.h>
+#include <HX711.h>
 #include <RtcDS3231.h>
 #include <SD.h>
 #include <SPI.h>
 #include <Time.h>
 #include <Wire.h> // must be included here so that Arduino library object file references work
 #include <string.h>
-#include <HX711.h>
+
 
 RtcDS3231<TwoWire> Rtc(Wire);
 
@@ -42,49 +43,42 @@ unsigned char searchRES[10];
 
 String TAG = "";
 String BT_readString = "";
-//String test_message1 = "job22bb336b099.9";
+// String test_message1 = "job22bb336b099.9";
 bool BT_statue = false;
 bool RFID_statue = false;
 
-volatile double waterFlow;
-
+volatile float waterFlow;
+float FG = 000.0, SG = 000.0, DF = 000.0;
 File myFile;
 Sd2Card card;
 SdVolume volume;
 SdFile root;
 
-void RTC()
-{
+void RTC() {
   pinMode(RtcSquareWavePin, INPUT_PULLUP);
   Rtc.Begin();
   RtcDateTime compiled = RtcDateTime(__DATE__, __TIME__);
 
-  if (!Rtc.IsDateTimeValid())
-  {
-    if (Rtc.LastError() != 0)
-    {
+  if (!Rtc.IsDateTimeValid()) {
+    if (Rtc.LastError() != 0) {
       // we have a communications error
       // see https://www.arduino.cc/en/Reference/WireEndTransmission for
       // what the number means
       Serial.print("RTC communications error = ");
       Serial.println(Rtc.LastError());
-    }
-    else
-    {
+    } else {
       Serial.println("RTC lost confidence in the DateTime!");
       Rtc.SetDateTime(compiled);
     }
   }
 
-  if (!Rtc.GetIsRunning())
-  {
+  if (!Rtc.GetIsRunning()) {
     Serial.println("RTC was not actively running, starting now");
     Rtc.SetIsRunning(true);
   }
 
   RtcDateTime now = Rtc.GetDateTime();
-  if (now < compiled)
-  {
+  if (now < compiled) {
     Serial.println("RTC is older than compile time!  (Updating DateTime)");
     Rtc.SetDateTime(compiled);
   }
@@ -103,33 +97,27 @@ void RTC()
   attachInterrupt(RtcSquareWaveInterrupt, InteruptServiceRoutine, FALLING);
   Serial.println("RTC...Success!");
 }
-void SD1()
-{
+void SD1() {
   Serial.print("SD card...");
-  if (!SD.begin(53))
-  {
+  if (!SD.begin(53)) {
     Serial.println("Fail!");
     return;
   }
   Serial.println("Success!");
 }
-void HX7111()
-{
+void HX7111() {
   Serial.print("HX711...");
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
-  scale.set_scale(ratio); // this value is obtained by calibrating the scale with known weights; see the README for details
+  scale.set_scale(ratio); // this value is obtained by calibrating the scale
+                          // with known weights; see the README for details
   scale.tare();           // reset the scale to 0
-  if (scale.wait_ready_retry(10))
-  {
+  if (scale.wait_ready_retry(10)) {
     Serial.println("Success!");
-  }
-  else
-  {
+  } else {
     Serial.println("Fail!");
   }
 }
-void setup()
-{
+void setup() {
   Serial.begin(115200);
   BT.begin(115200);
   RFID.begin(19200);
@@ -148,32 +136,27 @@ void setup()
   Serial.println("DHT11...Success!");
   Serial.println("================= Finished =====================");
 }
-void BTRoutine()
-{
+void BTRoutine() {
   //
   BT_statue = true;
 }
-void InteruptServiceRoutine()
-{
+void InteruptServiceRoutine() {
   // since this interupted any other running code,
   // don't do anything that takes long and especially avoid
   // any communications calls within this routine
   interuptCount++;
   interuptFlag = true;
 }
-void WaterFlowpulse() //measure the quantity of square wave
+void WaterFlowpulse() // measure the quantity of square wave
 {
-  waterFlow += 1.0 / 5880.0;
+  waterFlow += 1000.0 / 5880.0;
 }
-void loop()
-{
+void loop() {
   sensors_event_t event;
-  if (BT_statue)
-  {
+  if (BT_statue) {
     // Serial.println("HIGH");
     Serial.println("=================== Task =======================");
-    if (BT.available())
-    {
+    if (BT.available()) {
       BT_readString = BT.readString();
       Serial.print("BT:Pi Command: ");
       Serial.println(BT_readString);
@@ -183,29 +166,22 @@ void loop()
       BT_readString_Part2 = BT_readString.substring(3, 10);
       BT_readString_Part3 = BT_readString.substring(11, 14);
       */
-      if (BT_readString == "test")
-      {
+      if (BT_readString == "test") {
         BT.print("ok");
       }
-      if (BT_readString.substring(0, 2) == "job")
-      {
+      if (BT_readString.substring(0, 2) == "job") {
         bool state = true;
-        while (state)
-        {
+        while (state) {
           TAG = "";
           RFID.write(searchCMD, 5);
           delay(120);
-          if (RFID.available())
-          {
+          if (RFID.available()) {
             RFID.readBytes(searchRES, 10);
-            if (searchRES[0] == 0xaa && searchRES[3] != 0xdf)
-            {
-              for (int i = 0; i < 9; i++)
-              {
+            if (searchRES[0] == 0xaa && searchRES[3] != 0xdf) {
+              for (int i = 0; i < 9; i++) {
                 TAG += String(searchRES[i], HEX);
               }
-              if (TAG.substring(7, 15) == BT_readString.substring(3, 10))
-              {
+              if (TAG.substring(7, 15) == BT_readString.substring(3, 10)) {
                 state = false;
               }
             }
@@ -213,65 +189,52 @@ void loop()
         }
         //倒飼料
       }
-      if (BT_readString.substring(0, 2) == "upp")
-      {
+      if (BT_readString.substring(0, 2) == "upp") {
         //讀取sd 回傳
         Serial.println("Send pet data by BLE");
         RtcDateTime now = Rtc.GetDateTime();
         printDateTime(now);
         myFile = SD.open("pet.txt");
-        if (myFile)
-        {
-          while (myFile.available())
-          {
+        if (myFile) {
+          while (myFile.available()) {
             BT.write(myFile.read());
           }
           myFile.close();
           delay(50);
           Serial.println("done");
-        }
-        else
-        {
+        } else {
           Serial.println("error opening file");
         }
       }
-      if (BT_readString.substring(0, 2) == "upe")
-      {
+      if (BT_readString.substring(0, 2) == "upe") {
         //讀取sd 回傳
         Serial.println("Send env data by BLE");
         RtcDateTime now = Rtc.GetDateTime();
         printDateTime(now);
         myFile = SD.open("env.txt");
-        if (myFile)
-        {
-          while (myFile.available())
-          {
+        if (myFile) {
+          while (myFile.available()) {
             BT.write(myFile.read());
           }
           myFile.close();
           delay(50);
           Serial.println("done");
-        }
-        else
-        {
+        } else {
           Serial.println("error opening file");
         }
       }
       if (BT_readString.substring(0, 2) == "dlp" ||
-          BT_readString.substring(0, 2) == "dle")
-      {
+          BT_readString.substring(0, 2) == "dle") {
         //讀取sd 回傳
         Serial.println("Del file");
         RtcDateTime now = Rtc.GetDateTime();
         printDateTime(now);
         Serial.print("Del: ");
-        if (BT_readString.substring(0, 2) == "dlp")
-        {
+        if (BT_readString.substring(0, 2) == "dlp") {
           SD.remove("pet.txt");
           Serial.print("pet.txt");
         }
-        if (BT_readString.substring(0, 2) == "dle")
-        {
+        if (BT_readString.substring(0, 2) == "dle") {
           SD.remove("env.txt");
           Serial.print("env.txt");
         }
@@ -284,10 +247,8 @@ void loop()
     Serial.println("================= Finished =====================");
     Serial.println();
   }
-  if (!BT_statue)
-  {
-    if (RFID_statue)
-    {
+  if (!BT_statue) {
+    if (RFID_statue) {
       Serial.println("=================== Task =======================");
       Serial.println("RFID:Record pet data");
       RtcDateTime now = Rtc.GetDateTime();
@@ -295,13 +256,10 @@ void loop()
       TAG = "";
       RFID.write(searchCMD, 5);
       delay(120);
-      if (RFID.available())
-      {
+      if (RFID.available()) {
         RFID.readBytes(searchRES, 10);
-        if (searchRES[0] == 0xaa && searchRES[3] != 0xdf)
-        {
-          for (int i = 0; i < 9; i++)
-          {
+        if (searchRES[0] == 0xaa && searchRES[3] != 0xdf) {
+          for (int i = 0; i < 9; i++) {
             TAG += String(searchRES[i], HEX);
           }
           TAG = TAG.substring(7, 15);
@@ -309,8 +267,6 @@ void loop()
           Serial.println(TAG);
         }
       }
-      float FG = 000.0, SG = 000.0, DF = 000.0,WaterFlow=000.0;
-      waterFlow = 000.0;
       scale.power_up();
       FG = scale.get_value(10);
       Serial.print("First: ");
@@ -327,22 +283,19 @@ void loop()
       Serial.println();
       scale.power_down();
       DF = SG - FG;
-      if (DF <= 0)
-      {
+      if (DF <= 0) {
         DF = 000.0;
       }
       Serial.print("Difference: ");
       Serial.print(DF);
       Serial.print(" g");
       Serial.println();
-      WaterFlow=waterFlow*1000;
       Serial.print("waterFlow: ");
-      Serial.print(WaterFlow);
+      Serial.print(waterFlow);
       Serial.println(" mL");
 
       myFile = SD.open("pet.txt", FILE_WRITE);
-      if (myFile)
-      {
+      if (myFile) {
         myFile.print("P");
         myFile.print(location_code);
         myFile.print(now);
@@ -351,25 +304,22 @@ void loop()
         myFile.print(WaterFlow);
         myFile.println();
         myFile.close();
-      }
-      else
-      {
+      } else {
         Serial.println("error opening file");
       }
-
+      waterFlow = 000.00;
+      FG = 000.0, SG = 000.0, DF = 000.0;
       RFID_statue = false;
       Serial.println("================= Finished =====================");
       Serial.println();
     }
-    if (Alarmed() && interuptCount % 3 == 0)
-    {
+    if (Alarmed() && interuptCount % 3 == 0) {
       //定時紀錄溫溼度 存入sd
       sensors_event_t event;
       Serial.println("=================== Task =======================");
       Serial.println("Alarm:Record env data");
       myFile = SD.open("env.txt", FILE_WRITE);
-      if (myFile)
-      {
+      if (myFile) {
         myFile.print("E");
         myFile.print(location_code);
 
@@ -396,28 +346,23 @@ void loop()
         myFile.println();
         myFile.close();
         Serial.println("done");
-      }
-      else
-      {
+      } else {
         Serial.println("error opening file");
       }
       Serial.println("================= Finished =====================");
       Serial.println();
     }
-    if (interuptCount > 8)
-    {
+    if (interuptCount > 8) {
       interuptCount = 0;
     }
   }
-  if (digitalRead(RFID_statue_pin) == LOW)
-  {
+  if (digitalRead(RFID_statue_pin) == LOW) {
     // J1-7 有卡 輸出低電位
     RFID_statue = true;
   }
 }
 
-bool Alarmed()
-{
+bool Alarmed() {
   bool wasAlarmed = false;
   if (interuptFlag) // check our flag that gets sets in the interupt
   {
@@ -438,8 +383,7 @@ bool Alarmed()
 }
 #define countof(a) (sizeof(a) / sizeof(a[0]))
 
-void printDateTime(const RtcDateTime &dt)
-{
+void printDateTime(const RtcDateTime &dt) {
   char datestring[20];
 
   snprintf_P(datestring, countof(datestring),

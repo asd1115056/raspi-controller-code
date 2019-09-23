@@ -345,9 +345,6 @@ void loop()
       {
         myFile.print("P");
         myFile.print(location_code);
-
-        printDateTime(now);
-
         myFile.print(now);
         myFile.print(TAG);
         myFile.print(DF);

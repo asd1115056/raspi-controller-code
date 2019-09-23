@@ -9,11 +9,10 @@
 #include <Wire.h> // must be included here so that Arduino library object file references work
 #include <string.h>
 
-
 RtcDS3231<TwoWire> Rtc(Wire);
 
-const int LOADCELL_DOUT_PIN = 2;
-const int LOADCELL_SCK_PIN = 3;
+const int LOADCELL_DOUT_PIN = 5;
+const int LOADCELL_SCK_PIN = 6;
 HX711 scale;
 #define ratio 400.352
 
@@ -24,15 +23,15 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 #define RtcSquareWavePin 2       // Mega2560
 #define RtcSquareWaveInterrupt 0 // Mega2560
 
-#define BT Serial1
+#define BT Serial2
 #define BTPin 3       // Mega2560
 #define BTInterrupt 1 // Mega2560
 
-#define WaterFlowpin 2       // Mega2560
-#define WaterFlowInterrupt 0 // Mega2560
+#define WaterFlowpin 19       // Mega2560
+#define WaterFlowInterrupt 4 // Mega2560
 #define chipSelect 53
 
-#define RFID Serial2
+#define RFID Serial3
 #define location_code "A"
 #define RFID_statue_pin 4
 
@@ -106,16 +105,11 @@ void SD1() {
   Serial.println("Success!");
 }
 void HX7111() {
-  Serial.print("HX711...");
+  Serial.println("HX711...Success!");
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
-  scale.set_scale(ratio); // this value is obtained by calibrating the scale
-                          // with known weights; see the README for details
-  scale.tare();           // reset the scale to 0
-  if (scale.wait_ready_retry(10)) {
-    Serial.println("Success!");
-  } else {
-    Serial.println("Fail!");
-  }
+  scale.set_scale(400.352); // this value is obtained by calibrating the scale
+                            // with known weights; see the README for details
+  scale.tare();             // reset the scale to 0
 }
 void setup() {
   Serial.begin(115200);
@@ -268,7 +262,7 @@ void loop() {
         }
       }
       scale.power_up();
-      FG = scale.get_value(10);
+      FG = scale.get_units(10);
       Serial.print("First: ");
       Serial.print(FG);
       Serial.print(" g");
@@ -276,14 +270,19 @@ void loop() {
       scale.power_down();
       delay(9880);
       scale.power_up();
-      SG = scale.get_value(10);
+      SG = scale.get_units(10);
       Serial.print("Second: ");
       Serial.print(SG);
       Serial.print(" g");
       Serial.println();
       scale.power_down();
-      DF = SG - FG;
-      if (DF <= 0) {
+      if (SG > FG) {
+        DF = SG - FG;
+      }
+      if (SG <= FG) {
+        DF = FG - SG;
+      }
+      if (DF <= 0.9) {
         DF = 000.0;
       }
       Serial.print("Difference: ");
@@ -301,7 +300,7 @@ void loop() {
         myFile.print(now);
         myFile.print(TAG);
         myFile.print(DF);
-        myFile.print(WaterFlow);
+        myFile.print(waterFlow);
         myFile.println();
         myFile.close();
       } else {

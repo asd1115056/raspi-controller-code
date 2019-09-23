@@ -23,11 +23,15 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 #define RtcSquareWavePin 2       // Mega2560
 #define RtcSquareWaveInterrupt 0 // Mega2560
 
+#define BT Serial1
 #define BTPin 3       // Mega2560
 #define BTInterrupt 1 // Mega2560
 
+#define WaterFlowpin 2       // Mega2560
+#define WaterFlowInterrupt 0 // Mega2560
 #define chipSelect 53
 
+#define RFID Serial2
 #define location_code "A"
 #define RFID_statue_pin 4
 
@@ -41,6 +45,8 @@ String BT_readString = "";
 //String test_message1 = "job22bb336b099.9";
 bool BT_statue = false;
 bool RFID_statue = false;
+
+volatile double waterFlow;
 
 File myFile;
 Sd2Card card;
@@ -115,7 +121,7 @@ void HX7111()
   scale.tare();           // reset the scale to 0
   if (scale.wait_ready_retry(10))
   {
-     Serial.println("Success!");
+    Serial.println("Success!");
   }
   else
   {
@@ -125,8 +131,8 @@ void HX7111()
 void setup()
 {
   Serial.begin(115200);
-  Serial1.begin(115200);
-  Serial2.begin(19200);
+  BT.begin(115200);
+  RFID.begin(19200);
   Serial.println("=============== Initializing ===================");
   SD1();
   dht.begin();
@@ -134,7 +140,9 @@ void setup()
   RTC();
   pinMode(BTPin, INPUT_PULLUP);
   pinMode(RFID_statue_pin, INPUT);
+  pinMode(WaterFlowpin, INPUT);
   attachInterrupt(BTInterrupt, BTRoutine, RISING);
+  attachInterrupt(WaterFlowInterrupt, WaterFlowpulse, RISING);
   Serial.println("RFID...Success!");
   Serial.println("BLE...Success!");
   Serial.println("DHT11...Success!");
@@ -153,6 +161,10 @@ void InteruptServiceRoutine()
   interuptCount++;
   interuptFlag = true;
 }
+void WaterFlowpulse() //measure the quantity of square wave
+{
+  waterFlow += 1.0 / 5880.0;
+}
 void loop()
 {
   sensors_event_t event;
@@ -160,12 +172,12 @@ void loop()
   {
     // Serial.println("HIGH");
     Serial.println("=================== Task =======================");
-    if (Serial1.available())
+    if (BT.available())
     {
-      BT_readString = Serial1.readString();
+      BT_readString = BT.readString();
       Serial.print("BT:Pi Command: ");
       Serial.println(BT_readString);
-      // Serial1.print("ok");
+      // BT.print("ok");
       /*
       BT_readString_Part1 = BT_readString.substring(0, 2);
       BT_readString_Part2 = BT_readString.substring(3, 10);
@@ -173,7 +185,7 @@ void loop()
       */
       if (BT_readString == "test")
       {
-        Serial1.print("ok");
+        BT.print("ok");
       }
       if (BT_readString.substring(0, 2) == "job")
       {
@@ -181,11 +193,11 @@ void loop()
         while (state)
         {
           TAG = "";
-          Serial2.write(searchCMD, 5);
+          RFID.write(searchCMD, 5);
           delay(120);
-          if (Serial2.available())
+          if (RFID.available())
           {
-            Serial2.readBytes(searchRES, 10);
+            RFID.readBytes(searchRES, 10);
             if (searchRES[0] == 0xaa && searchRES[3] != 0xdf)
             {
               for (int i = 0; i < 9; i++)
@@ -212,7 +224,7 @@ void loop()
         {
           while (myFile.available())
           {
-            Serial1.write(myFile.read());
+            BT.write(myFile.read());
           }
           myFile.close();
           delay(50);
@@ -234,7 +246,7 @@ void loop()
         {
           while (myFile.available())
           {
-            Serial1.write(myFile.read());
+            BT.write(myFile.read());
           }
           myFile.close();
           delay(50);
@@ -264,7 +276,7 @@ void loop()
           Serial.print("env.txt");
         }
         Serial.println();
-        Serial1.print("Del:ok");
+        BT.print("Del:ok");
         Serial.println("done");
       }
     }
@@ -281,11 +293,11 @@ void loop()
       RtcDateTime now = Rtc.GetDateTime();
       printDateTime(now);
       TAG = "";
-      Serial2.write(searchCMD, 5);
+      RFID.write(searchCMD, 5);
       delay(120);
-      if (Serial2.available())
+      if (RFID.available())
       {
-        Serial2.readBytes(searchRES, 10);
+        RFID.readBytes(searchRES, 10);
         if (searchRES[0] == 0xaa && searchRES[3] != 0xdf)
         {
           for (int i = 0; i < 9; i++)
@@ -297,8 +309,56 @@ void loop()
           Serial.println(TAG);
         }
       }
+      float FG = 000.0, SG = 000.0, DF = 000.0,WaterFlow=000.0;
+      waterFlow = 000.0;
+      scale.power_up();
+      FG = scale.get_value(10);
+      Serial.print("First: ");
+      Serial.print(FG);
+      Serial.print(" g");
+      Serial.println();
+      scale.power_down();
+      delay(9880);
+      scale.power_up();
+      SG = scale.get_value(10);
+      Serial.print("Second: ");
+      Serial.print(SG);
+      Serial.print(" g");
+      Serial.println();
+      scale.power_down();
+      DF = SG - FG;
+      if (DF <= 0)
+      {
+        DF = 000.0;
+      }
+      Serial.print("Difference: ");
+      Serial.print(DF);
+      Serial.print(" g");
+      Serial.println();
+      WaterFlow=waterFlow*1000;
+      Serial.print("waterFlow: ");
+      Serial.print(WaterFlow);
+      Serial.println(" mL");
+
       myFile = SD.open("pet.txt", FILE_WRITE);
-      
+      if (myFile)
+      {
+        myFile.print("P");
+        myFile.print(location_code);
+
+        printDateTime(now);
+
+        myFile.print(now);
+        myFile.print(TAG);
+        myFile.print(DF);
+        myFile.print(WaterFlow);
+        myFile.println();
+        myFile.close();
+      }
+      else
+      {
+        Serial.println("error opening file");
+      }
 
       RFID_statue = false;
       Serial.println("================= Finished =====================");

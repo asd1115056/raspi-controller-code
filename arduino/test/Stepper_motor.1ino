@@ -1,0 +1,13 @@
+#include <Stepper.h>
+#define STEPS 100 //設置步進馬達旋轉一圈是多少步
+Stepper stepper(STEPS, 8, 9, 10, 11); //設置步進馬達的步數和引腳(Pin8, Pin9, Pin10, Pin11)
+
+void setup() {
+  // put your setup code here, to run once:
+  stepper.setSpeed(STEPS); //設置步進馬達旋轉一圈是100步
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  stepper.step(100); //設置步進馬達旋轉一圈是100步,放在Loop持續旋轉
+}

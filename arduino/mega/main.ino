@@ -11,7 +11,8 @@
 #include <string.h>
 
 #define STEPS 100 //設置步進馬達旋轉一圈是多少步
-Stepper stepper(STEPS, 9, 10, 11, 12); //設置步進馬達的步數和引腳(Pin9, Pin10, Pin11, Pin12)
+Stepper stepper(STEPS, 9, 10, 11,
+                12); //設置步進馬達的步數和引腳(Pin9, Pin10, Pin11, Pin12)
 
 RtcDS3231<TwoWire> Rtc(Wire);
 
@@ -133,7 +134,7 @@ void setup() {
   pinMode(WaterFlowpin, INPUT);
   attachInterrupt(BTInterrupt, BTRoutine, RISING);
   attachInterrupt(WaterFlowInterrupt, WaterFlowpulse, RISING);
-  pinMode(buzzerpin,OUTPUT);
+  pinMode(buzzerpin, OUTPUT);
   stepper.setSpeed(STEPS);
   Serial.println("RFID...Success!");
   Serial.println("BLE...Success!");
@@ -165,12 +166,12 @@ void loop() {
       Serial.print("BT:Pi Command: ");
       Serial.println(BT_readString);
       Serial.println(BT_readString.substring(3, 11));
-      Serial.println(BT_readString.substring(11, 14));
+      Serial.println(BT_readString.substring(11, 17));
       // BT.print("ok");
       /*
       BT_readString_Part1 = BT_readString.substring(0, 3);
       BT_readString_Part2 = BT_readString.substring(3, 11);
-      BT_readString_Part3 = BT_readString.substring(11, 14);
+      BT_readString_Part3 = BT_readString.substring(11, 17);
       */
       if (BT_readString == "test") {
         BT.print("ok");
@@ -193,29 +194,30 @@ void loop() {
               }
               if (TAG.substring(7, 15) == BT_readString.substring(3, 11)) {
                 float total = 0, j1 = 0, j2 = 0;
+                Serial.print("Tag: ");
+                Serial.println(TAG.substring(7, 15));
+
+                scale.power_up();
+                j1 = scale.get_units(5);
+                scale.power_down();
+                Serial.print("Frist weight: ");
+                Serial.println(j1);
+
                 while (1) {
                   //倒飼料
-                  scale.power_up();
-                  j1 = scale.get_units(20);
-                  scale.power_down();
-                  Serial.println(j1);
 
                   stepper.step(36);
 
-                  delay(1000);
                   scale.power_up();
-                  j2 = scale.get_units(20);
+                  j2 = scale.get_units(5);
                   scale.power_down();
+                  Serial.print("Weight: ");
                   Serial.println(j2);
-                  if (j1 > j2) {
-                    total = j1 - j2;
-                  }
-                  if (j2 > j1) {
-                    total = j2 - j1;
-                  }
-                  total += total;
+
+                  total = j2 - j1;
+                  Serial.print("DF weight: ");
                   Serial.println(total);
-                  if(total >= BT_readString.substring(11, 14).toFloat()){
+                  if (total >= BT_readString.substring(11, 17).toFloat()) {
                     break;
                   }
                 }
@@ -224,7 +226,6 @@ void loop() {
             }
           }
         }
-
       }
       if (BT_readString.substring(0, 3) == "upp") {
         //讀取sd 回傳
@@ -312,7 +313,7 @@ void loop() {
               myFile.print(now);
 
               scale.power_up();
-              FG = scale.get_units(20);
+              FG = scale.get_units(10);
               Serial.print("First: ");
               Serial.print(FG);
               Serial.print(" g");
@@ -322,7 +323,7 @@ void loop() {
               delay(9880);
 
               scale.power_up();
-              SG = scale.get_units(20);
+              SG = scale.get_units(10);
               Serial.print("Second: ");
               Serial.print(SG);
               Serial.print(" g");

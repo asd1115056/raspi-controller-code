@@ -1,6 +1,6 @@
 {
     "port": "COM8",
     "board": "arduino:avr:mega",
-    "sketch": "arduino\\test\\Stepper_motor.ino",
+    "sketch": "arduino\\mega\\main.ino",
     "configuration": "cpu=atmega2560"
 }

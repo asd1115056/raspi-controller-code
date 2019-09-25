@@ -116,9 +116,9 @@ void SD1() {
 void HX7111() {
   Serial.println("HX711...Success!");
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
-  scale.set_scale(400.352); // this value is obtained by calibrating the scale
-                            // with known weights; see the README for details
-  scale.tare();             // reset the scale to 0
+  scale.set_scale(ratio); // this value is obtained by calibrating the scale
+                          // with known weights; see the README for details
+  scale.tare();           // reset the scale to 0
 }
 void setup() {
   Serial.begin(115200);
@@ -165,8 +165,8 @@ void loop() {
       BT_readString = BT.readString();
       Serial.print("BT:Pi Command: ");
       Serial.println(BT_readString);
-      Serial.println(BT_readString.substring(3, 11));
-      Serial.println(BT_readString.substring(11, 17));
+      // Serial.println(BT_readString.substring(3, 11));
+      // Serial.println(BT_readString.substring(11, 17));
       // BT.print("ok");
       /*
       BT_readString_Part1 = BT_readString.substring(0, 3);
@@ -201,7 +201,6 @@ void loop() {
 
                 scale.power_up();
                 j1 = scale.get_units(5);
-                scale.power_down();
                 Serial.print("Frist weight: ");
                 Serial.println(j1);
 
@@ -210,9 +209,9 @@ void loop() {
 
                   stepper.step(36);
 
-                  scale.power_up();
+                  // scale.power_up();
                   j2 = scale.get_units(5);
-                  scale.power_down();
+                  // scale.power_down();
                   Serial.print("Weight: ");
                   Serial.println(j2);
 
@@ -224,6 +223,7 @@ void loop() {
                   }
                 }
                 state = false;
+                scale.power_down();
               }
             }
           }

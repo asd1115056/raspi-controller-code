@@ -1,0 +1,20 @@
+const int buzzerpin = 8; // 用Pin8 輸出方波至蜂鳴器
+
+ 
+
+void setup() {
+
+    pinMode(buzzerpin,OUTPUT);
+
+}
+
+ 
+
+void loop() {
+
+    // simulate phone call
+
+  tone(buzzerpin, 1000, 1000);
+  delay(2000);
+
+}

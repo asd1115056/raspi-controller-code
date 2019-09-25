@@ -180,6 +180,8 @@ void loop() {
         BT.print("ok");
         Serial.println("Job feed");
         Serial.println("Search Tag...");
+        RtcDateTime now = Rtc.GetDateTime();
+        printDateTime(now);
         bool state = true;
         while (state) {
           tone(buzzerpin, 1000, 100);

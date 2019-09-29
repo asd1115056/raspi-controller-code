@@ -2,13 +2,16 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from datetime import datetime
 #from ble import *
 #from net import *
+from upload import *
 import requests
 import ntplib
 import time
 import os
 import json
 
+
 url = 'http://localhost:8000/ajax/all_list_Schedule'
+data_upload = "http://localhost:8000/api/data_upload"
 sched = BlockingScheduler()
 count = 0
 
@@ -30,7 +33,8 @@ def Add_Scheduler(x):
     id_count = 0
     for u in x:
         temp = datetime.strptime(u['schedule_time'], '%H:%M:%S')
-        sched.add_job(task, 'cron', id=str(id_count), hour=temp.hour,minute=temp.minute, kwargs={"a": u['Tag'], "b": u['food_amount']})
+        sched.add_job(task, 'cron', id=str(id_count), hour=temp.hour,
+                      minute=temp.minute, kwargs={"a": u['Tag'], "b": u['food_amount']})
         id_count += 1
 
 
@@ -42,39 +46,89 @@ def delete_Scheduler(x):
 def task(a, b):
     print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), a, b)
 
-def BT_sync():
-    print ("BT_sync: begin")
-    flag=True
-    count=0
-    while flag:
-        env_temp=ble("upe")
-        if env_temp != "":
-            flag=False
-        else:
-            print ("BT_sync fail!"+ " Retry "+ str(count) +" time")
-            time.sleep(30)
-        count+=1
-        if count>3:
-            print ("BT_sync fail!"+ " timeout")
-            break
-    if count<3 and env_temp !="":
-        f = open('env.txt','w')
-        print(env_temp, file = f)
+
+def BT_sync_env():
+    print("BT_sync: begin")
+    print("Send upe command")
+    temp = ble("upe")
+    if temp != "":
+        print("done!")
+        print("Save file....")
+        f = open("env.txt", 'w')
+        print(temp, file=f)
         f.close()
-        time.sleep(5)
-        env_temp=ble("dle")
-        if env_temp=="Del:ok":
-            print ("BT_sync: done")
-def BT_update():
-    count=0
-    f=open("env.txt")
-    while True:
-        line = f.readline()
-        count+=1
-        if len(line)==22: 
-            print(str(count)+"  "+line)
+        print("done!")
+        time.sleep(10)
+        print("Send del command....")
+        temp = ble("dle")
+        if temp == "Del:ok":
+            print("done")
+        print("BT_update:begin")
+        sucess = 0
+        fail = 0
+        f = open("env.txt")
+        while True:
+            line = f.readline()
+            if len(line) == 22 or len(line) == 32:
+                if upload(line) == 200:
+                    sucess += 1
+                else:
+                    fail += 1
+            else:
+                break
+        time.sleep(0.05)
+        print("Sucess: " + str(sucess) + " Fail: " + str(fail))
+        f.close()
+        if os.path.exists("env.txt"):
+            os.remove("env.txt")
+            print("Sucess del env.txt")
         else:
-            break
+            print("The file does not exist")
+        print("done")
+    else:
+        print("blank")
+
+def BT_sync_pet():
+    print("BT_sync: begin")
+    print("Send pet command")
+    temp = ble("upp")
+    if temp != "":
+        print("done!")
+        print("Save file....")
+        f = open("pet.txt", 'w')
+        print(temp, file=f)
+        f.close()
+        print("done!")
+        time.sleep(10)
+        print("Send del command....")
+        temp = ble("dlp")
+        if temp == "Del:ok":
+            print("done")
+        print("BT_update:begin")
+        sucess = 0
+        fail = 0
+        f = open("pet.txt")
+        while True:
+            line = f.readline()
+            if len(line) == 22 or len(line) == 32:
+                if upload(line) == 200:
+                    sucess += 1
+                else:
+                    fail += 1
+            else:
+                break
+            time.sleep(0.05)
+        print("Sucess: " + str(sucess) + " Fail: " + str(fail))
+        f.close()
+        if os.path.exists("pet.txt"):
+            os.remove("pet.txt")
+            print("Sucess del pet.txt")
+        else:
+            print("The file does not exist")
+        print("done")
+    else:
+        print("blank")
+
 
 def sync(url):
     global sched, count
@@ -120,10 +174,11 @@ def sync(url):
 
 
 if __name__ == "__main__":
-    #sync_time()
+    # sync_time()
     #sched.add_job(sync, 'interval', seconds=5,args=[url])
     #sched.add_job(task1, 'interval', seconds=10)
-    #sched.add_job(BT_sync, 'interval', seconds=10)
-    BT_update()
-    #sched.start()
-    #pass
+    sched.add_job(BT_sync_env, 'interval', seconds=60)
+    sched.add_job(BT_sync_pet, 'interval', seconds=120)
+    # BT_update("env")
+    sched.start()
+    # pass

@@ -21,7 +21,7 @@ const int LOADCELL_SCK_PIN = 6;
 HX711 scale;
 #define ratio 400.352
 
-#define DHTPIN 22
+#define DHTPIN 36
 #define DHTTYPE DHT11
 DHT_Unified dht(DHTPIN, DHTTYPE);
 
@@ -382,7 +382,7 @@ void loop() {
       FG = 000.0, SG = 000.0, DF = 000.0;
       RFID_statue = false;
     }
-    if (Alarmed() && interuptCount % 3 == 0) {
+    if (Alarmed() && interuptCount % 1 == 0) {
       //定時紀錄溫溼度 存入sd
       sensors_event_t event;
       Serial.println("=================== Task =======================");

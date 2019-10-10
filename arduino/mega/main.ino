@@ -31,13 +31,13 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 #define BT Serial2
 #define BTPin 3       // Mega2560
 #define BTInterrupt 1 // Mega2560
+#define Ble "11:15:85:00:4f:ee"
 
 #define WaterFlowpin 19      // Mega2560
 #define WaterFlowInterrupt 4 // Mega2560
 #define chipSelect 53
 
 #define RFID Serial3
-#define location_code "A"
 #define RFID_statue_pin 4
 
 volatile uint16_t interuptCount = 0;
@@ -305,14 +305,16 @@ void loop() {
             myFile = SD.open("pet.txt", FILE_WRITE);
             if (myFile) {
               myFile.print("P");
-              myFile.print(location_code);
-              Serial.print("Tag: ");
-              Serial.println(TAG);
-              myFile.print(TAG);
+              myFile.print(Ble);
+              Serial.println(Ble);
 
               RtcDateTime now = Rtc.GetDateTime();
               printDateTime(now);
               myFile.print(now);
+
+              Serial.print("Tag: ");
+              Serial.println(TAG);
+              myFile.print(TAG);
 
               scale.power_up();
               FG = scale.get_units(10);
@@ -391,6 +393,9 @@ void loop() {
       if (myFile) {
         myFile.print("E");
         myFile.print(location_code);
+
+        myFile.print(Ble);
+        Serial.println(Ble);
 
         RtcDateTime now = Rtc.GetDateTime();
         myFile.print(now);

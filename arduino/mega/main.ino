@@ -404,9 +404,16 @@ void loop() {
         dht.temperature().getEvent(&event);
 
         Serial.print(F("Temperature: "));
-        if (!isnan(event.relative_humidity)) {
-          Serial.print(event.temperature);
-          myFile.print(event.temperature);
+        if (!isnan(event.temperature)) {
+              String temp1 = "";
+              if (event.temperature >= 0 && event.temperature < 10) {
+                temp1 = String("") + "00" + event.temperature;
+              }
+              if (event.temperature >= 10 && event.temperature < 100) {
+                temp1 = String("") + "0" + event.temperature;
+              }
+          Serial.print(temp1);
+          myFile.print(temp1);
           Serial.println(F("°C"));
         } else {
           Serial.println("error !");
@@ -415,8 +422,15 @@ void loop() {
         dht.humidity().getEvent(&event);
         Serial.print(F("Humidity: "));
         if (!isnan(event.relative_humidity)) {
-          Serial.print(event.relative_humidity);
-          myFile.print(event.relative_humidity);
+                        String temp2 = "";
+              if (event.relative_humidity >= 0 && event.relative_humidity < 10) {
+                temp2 = String("") + "00" + event.relative_humidity;
+              }
+              if (event.relative_humidity >= 10 && event.relative_humidity < 100) {
+                temp2 = String("") + "0" + event.relative_humidity;
+              }
+          Serial.print(temp2);
+          myFile.print(temp2);
           Serial.println(F("%"));
         } else {
           Serial.println("error !");

@@ -109,8 +109,8 @@ void SD1() {
     Serial.println("Fail!");
     return;
   }
-  // SD.remove("pet.txt");
-  // SD.remove("env.txt");
+  SD.remove("pet.txt");
+  SD.remove("env.txt");
   Serial.println("Success!");
 }
 void HX7111() {

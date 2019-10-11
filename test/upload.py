@@ -1,18 +1,17 @@
 import json
 import requests
 
-data_upload = "http://192.168.0.3:8000/api/data_upload"
+
 
 params1 = "E111585004FCC6224266200240005400"
 params2 = "P111585004FCC6224266206D1CDF2B0988700000"
 
 
-def upload(T):
+def upload(text):
     global data_upload
-    params = {'DATA': T}
+    params = {'DATA': text}
     headers = {'content-type': 'application/json'}
-    response = requests.post(
-        data_upload, data=json.dumps(params), headers=headers)
+    response = requests.post(data_upload, data=json.dumps(params), headers=headers)
     # print(response)
     print(response.text)
     # return response.status_code

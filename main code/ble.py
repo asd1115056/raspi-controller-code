@@ -95,8 +95,8 @@ def ble_scan():
 def ble_initializing():
     i=1
     arr=[]
-    scan_timeout=10.0
-    connect_timeout=10.0
+    scan_timeout=10
+    connect_timeout=10
     lcd_clearall()
     lcd_print(0,0,0.5,"BLE Initializing") #(line,postion,delay,text)
     lcd_print(1,0,0,"Scanning.....    ")
@@ -115,7 +115,7 @@ def ble_initializing():
                     ble_disconnect()
                     if temp=="Ok!":
                         arr.append(dev.addr)
-                        lcd_print(1,0,1,"Ok!           ")
+                        lcd_print(1,0,1,"SUCCESS!           ")
                     else:
                         lcd_print(1,0,1,"FAIL!          ")  
             except TimeoutException as e:

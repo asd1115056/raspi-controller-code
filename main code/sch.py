@@ -81,6 +81,7 @@ def BT_sync_pet():
 
 def Schedule_sync():
     global sched,schedule_list_url
+    #開機時網路測試順便刪掉暫存檔
     schedule_list=download_schedule(schedule_list_url)
     if  schedule_list:
         try:
@@ -92,12 +93,10 @@ def Schedule_sync():
                         pass
                     else:
                         #刪掉舊任務後創建新任務並存檔
-                        if (len(eval(file_data)) and len(eval(schedule_list)))!=0:
-                            print(len(eval(file_data)))
-                            print("Del old Scheduler")
-                            Delete_Scheduler(len(eval(file_data)))
-                            print("Create new Scheduler")
-                            Add_Scheduler(eval(schedule_list))
+                        print("Del old Scheduler")
+                        Delete_Scheduler(len(eval(file_data)))
+                        print("Create new Scheduler")
+                        Add_Scheduler(eval(schedule_list))
                         with open('schedule.txt', 'w') as f:
                             f.write(schedule_list)
                 else:

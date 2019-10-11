@@ -26,6 +26,10 @@ def net_initializing():
         lcd_print(1,0,1,"FAIL!          ")
         return False
     finally:
+        if os.path.exists("schedule.txt"):
+            #刪掉暫存檔
+            os.remove("schedule.txt")
+            print("Remove old schedule.txt ")
         lcd_clearall()
 '''
 

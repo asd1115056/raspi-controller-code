@@ -6,7 +6,6 @@ service__uuid = "0000ffe0-0000-1000-8000-00805f9b34fb"
 notify_uuid = "0000ffe1-0000-1000-8000-00805f9b34fb"
 write_uuid = "0000ffe2-0000-1000-8000-00805f9b34fb"
 ble_mac="11:15:85:00:4f:ee"
-#ble_mac="11:15:85:00:4f:65"
 ble_conn = None
 
 class TimeoutException(Exception): pass
@@ -35,20 +34,20 @@ class MyDelegate(DefaultDelegate):
             pass
 
 def ble_connect(devAddr):
-    global ble_conn,ble_mac
+    global ble_conn
     if not devAddr is None and ble_conn is None:
         ble_conn = Peripheral(devAddr, ADDR_TYPE_PUBLIC)
         ble_conn.setDelegate(MyDelegate(ble_conn))
-        print("connected")
+        #print("connected")
 
 def ble_disconnect():
     global ble_conn
     ble_conn.disconnect()
     ble_conn=None
-    print("disconnected")
+    #print("disconnected")
 
 def ble_scan():
-    timeout=5.0
+    timeout=10.0
     scanner = Scanner().withDelegate(MyDelegate(None))
     devices = scanner.scan(timeout)
     for dev in devices:
@@ -84,8 +83,6 @@ def ble_data(send):
         temp=""
         for i in range(0,count):
              temp+= locals()['X%s' % (i)]
-        #print(temp)
-        #print(count)
         return temp
         
 if __name__ == "__main__":

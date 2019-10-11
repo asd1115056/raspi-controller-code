@@ -15,26 +15,11 @@ data_upload = "http://localhost:8000/api/data_upload"
 sched = BlockingScheduler()
 count = 0
 
-
-def sync_time():
-    try:
-        c = ntplib.NTPClient()
-        response = c.request('pool.ntp.org')
-        ts = response.tx_time
-        _date = time.strftime('%Y-%m-%d', time.localtime(ts))
-        _time = time.strftime('%X', time.localtime(ts))
-        os.system('date {} && time {}'.format(_date, _time))
-    except:
-        print('sync_time:could not sync with time server.')
-    print('sync_time:Done.')
-
-
 def Add_Scheduler(x):
     id_count = 0
     for u in x:
         temp = datetime.strptime(u['schedule_time'], '%H:%M:%S')
-        sched.add_job(task, 'cron', id=str(id_count), hour=temp.hour,
-                      minute=temp.minute, kwargs={"a": u['Tag'], "b": u['food_amount']})
+        sched.add_job(task, 'cron', id=str(id_count), hour=temp.hour,minute=temp.minute, kwargs={"a": u['mac'],"b": u['Tag'], "c": u['food_amount']})
         id_count += 1
 
 
@@ -44,49 +29,13 @@ def delete_Scheduler(x):
 
 
 def task(a, b):
-    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), a, b)
+    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), a, b,c)
 
 
 def BT_sync_env():
-    print("BT_sync: begin")
-    print("Send upe command")
-    temp = ble("upe")
-    if temp != "":
-        print("done!")
-        print("Save file....")
-        f = open("env.txt", 'w')
-        print(temp, file=f)
-        f.close()
-        print("done!")
-        time.sleep(10)
-        print("Send del command....")
-        temp = ble("dle")
-        if temp == "Del:ok":
-            print("done")
-        print("BT_update:begin")
-        sucess = 0
-        fail = 0
-        f = open("env.txt")
-        while True:
-            line = f.readline()
-            if len(line) == 22 or len(line) == 32:
-                if upload(line) == 200:
-                    sucess += 1
-                else:
-                    fail += 1
-            else:
-                break
-        time.sleep(0.05)
-        print("Sucess: " + str(sucess) + " Fail: " + str(fail))
-        f.close()
-        if os.path.exists("env.txt"):
-            os.remove("env.txt")
-            print("Sucess del env.txt")
-        else:
-            print("The file does not exist")
-        print("done")
-    else:
-        print("blank")
+    #lcd_clearall()
+    #lcd_print(1,0,1"Sync begining")
+    
 
 def BT_sync_pet():
     print("BT_sync: begin")

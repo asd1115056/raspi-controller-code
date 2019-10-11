@@ -1,8 +1,7 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
 from datetime import datetime
 #from ble import *
-#from net import *
-from upload import *
+from net import *
 import requests
 import ntplib
 import time
@@ -23,20 +22,20 @@ def Add_Scheduler(x):
         id_count += 1
 
 
-def delete_Scheduler(x):
+def Delete_Scheduler(x):
     for j in range(0, x):
         sched.remove_job(str(j))
 
 
-def task(a, b):
-    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), a, b,c)
+def task(a, b, c):
+    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), a, b, c )
 
 
 def BT_sync_env():
     #lcd_clearall()
     #lcd_print(1,0,1"Sync begining")
-    
-
+    pass
+'''
 def BT_sync_pet():
     print("BT_sync: begin")
     print("Send pet command")
@@ -77,57 +76,57 @@ def BT_sync_pet():
         print("done")
     else:
         print("blank")
+'''
 
 
-def sync(url):
-    global sched, count
-    new = []
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        r = json.loads(response.text)
-        for di in r:
-            new.append(di['fields'])
-        if count == 0:
-            Add_Scheduler(new)
-            print(sched.get_jobs(), 'Connection:first')
-            with open('Scheduler_save.txt', 'w') as f:
-                f.write(str(new))
-            count = 1
-        else:
-            with open('Scheduler_save.txt', 'r') as f:
-                output = eval(f.readline())
-            if new != output:
-                delete_Scheduler(len(output))
-                Add_Scheduler(new)
-                print(sched.get_jobs(), 'Connection:change')
-                with open('Scheduler_save.txt', 'w') as f:
-                    f.write(str(new))
-            else:
-                print(sched.get_jobs(), 'Connection:same')
-    except requests.exceptions.RequestException:
+def Schedule_sync():
+    global sched,schedule_list_url
+    schedule_list=download_schedule(schedule_list_url)
+    if  schedule_list:
         try:
-            with open('Scheduler_save.txt', 'r') as f:
-                output = eval(f.readline())
+            with open('schedule.txt', 'r') as f:
+                file_data = f.readline()
+                if  file_data:
+                    if  eval(schedule_list)==eval(file_data):
+                        print(sched.get_jobs(),"Same data pass")
+                        pass
+                    else:
+                        #刪掉舊任務後創建新任務並存檔
+                        if (len(eval(file_data)) and len(eval(schedule_list)))!=0:
+                            print(len(eval(file_data)))
+                            print("Del old Scheduler")
+                            Delete_Scheduler(len(eval(file_data)))
+                            print("Create new Scheduler")
+                            Add_Scheduler(eval(schedule_list))
+                        with open('schedule.txt', 'w') as f:
+                            f.write(schedule_list)
+                else:
+                    #直接創新的
+                    Add_Scheduler(eval(schedule_list))
+                    print("Create new Scheduler")
+                    with open('schedule.txt', 'w') as f:
+                        f.write(schedule_list)
         except IOError:
+            #檔案可能無法讀取或不存在
+            #直接創新的
+            Add_Scheduler(eval(schedule_list))
+            with open('schedule.txt', 'w') as f:
+                f.write(schedule_list)
             print("Error: file no find or can not read")
-        else:
-            if count == 0:
-                Add_Scheduler(output)
-                print(sched.get_jobs(), 'ConnectionError:first')
-                count = 1
-            else:
-                delete_Scheduler(len(output))
-                Add_Scheduler(output)
-                print(sched.get_jobs(), 'ConnectionError:same')
+    else:
+        #沒有網路連線時
+        print("Lost connect!")
+        #lcd 顯示 Lost connect!
+        pass
+
 
 
 if __name__ == "__main__":
-    # sync_time()
-    #sched.add_job(sync, 'interval', seconds=5,args=[url])
+    #sync_time()
+    sched.add_job(Schedule_sync, 'interval', seconds=10)
     #sched.add_job(task1, 'interval', seconds=10)
-    sched.add_job(BT_sync_env, 'interval', seconds=60)
-    sched.add_job(BT_sync_pet, 'interval', seconds=120)
+    #sched.add_job(BT_sync_env, 'interval', seconds=60)
+    #sched.add_job(BT_sync_pet, 'interval', seconds=120)
     # BT_update("env")
     sched.start()
     # pass

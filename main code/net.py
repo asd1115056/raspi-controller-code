@@ -1,16 +1,16 @@
-from lcd import *
+#from lcd import *
 import requests
 import json
 
-schedule_list = 'http://localhost:8000/api/schedule_list'
-device_list = 'http://localhost:8000/api/device_list'
-upload='http://localhost:8000/api/data_upload'
+schedule_list_url = 'http://localhost:8000/api/schedule_list'
+device_list_url = 'http://localhost:8000/api/device_list'
+upload_url='http://localhost:8000/api/data_upload'
 
 test_url='https://www.google.com.tw/webhp?hl=zh-TW'
 
 params1 = "E111585004FCC6224266200240005400"
 params2 = "P111585004FCC6224266206D1CDF2B0988700000"
-
+'''
 def net_initializing():
     #check django Server Satute
     global test_url
@@ -27,6 +27,7 @@ def net_initializing():
         return False
     finally:
         lcd_clearall()
+'''
 
 def upload_data(url,text):
     try:
@@ -39,7 +40,7 @@ def upload_data(url,text):
     except requests.exceptions.RequestException as e:
         return False
 
-def download_schedule(url,text):
+def download_schedule(url):
     try:
         response = requests.get(url,timeout=20)
         response.raise_for_status()
@@ -54,5 +55,5 @@ if __name__ == "__main__":
     bool1=net_initializing(url)
     print(bool1)
     '''
-    a=upload_data(upload_url,params2)
+    a=download_schedule(schedule_list_url)
     print(a)

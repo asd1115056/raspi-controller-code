@@ -1,4 +1,6 @@
 from bluepy.btle import *
+import signal
+from contextlib import contextmanager
 
 service__uuid = "0000ffe0-0000-1000-8000-00805f9b34fb"
 notify_uuid = "0000ffe1-0000-1000-8000-00805f9b34fb"
@@ -6,6 +8,20 @@ write_uuid = "0000ffe2-0000-1000-8000-00805f9b34fb"
 ble_mac="11:15:85:00:4f:ee"
 #ble_mac="11:15:85:00:4f:65"
 ble_conn = None
+
+class TimeoutException(Exception): pass
+
+@contextmanager
+def time_limit(seconds):
+    def signal_handler(signum, frame):
+        raise TimeoutException("Timed out!")
+    signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+
 
 class MyDelegate(DefaultDelegate):
     def __init__(self, conn):
@@ -33,10 +49,20 @@ def ble_disconnect():
 
 def ble_scan():
     timeout=5.0
-    scanner = Scanner().withDelegate(MyDelegate(None)))
+    scanner = Scanner().withDelegate(MyDelegate(None))
     devices = scanner.scan(timeout)
     for dev in devices:
             print("MAC:", dev.addr, " Rssi ", str(dev.rssi))
+            try:
+                with time_limit(10):
+                    ble_connect(dev.addr)
+                    time.sleep(0.025)
+                    temp=ble_data("test")
+                    print(temp)
+                    ble_disconnect()
+            except TimeoutException as e:
+                    print("Timed out!")
+
 
 def ble_data(send): 
         global ble_conn,output,write_uuid,notify_uuid
@@ -61,15 +87,6 @@ def ble_data(send):
         #print(temp)
         #print(count)
         return temp
-
-def ble(text):
-    global ble_mac
-    ble_connect(ble_mac)
-    time.sleep(0.025)
-    temp=ble_data(text)
-    ble_disconnect()
-    return temp
-
+        
 if __name__ == "__main__":
     ble_scan()
-   

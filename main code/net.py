@@ -51,6 +51,14 @@ def download_schedule(url):
         return response.text
     except requests.exceptions.RequestException as e:
         return False
+        
+def download_device(url):
+    try:
+        response = requests.get(url,timeout=20)
+        response.raise_for_status()
+        return response.text
+    except requests.exceptions.RequestException as e:
+        return False
 
         
 

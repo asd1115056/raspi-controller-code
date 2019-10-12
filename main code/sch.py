@@ -80,9 +80,40 @@ def BT_sync_pet():
 
 
 def Schedule_sync():
-    global sched,schedule_list_url
+    global sched,schedule_list_url,device_list_url
     #開機時網路測試順便刪掉暫存檔
     schedule_list=download_schedule(schedule_list_url)
+    device_list=download_device(device_list_url)
+    if  device_list:
+        try:
+            with open('schedule.txt', 'r') as f:
+                file_data = f.readline()
+                if  file_data:
+                    if  eval(device_list)==eval(file_data):
+                        print("Same data pass")
+                        pass
+                    else:
+                        #刪掉舊任務後創建新任務並存檔
+                        Add_Scheduler(eval(device_list))
+                        with open('schedule.txt', 'w') as f:
+                            f.write(device_list)
+                else:
+                    #直接創新的
+                    print("Create new Scheduler")
+                    with open('schedule.txt', 'w') as f:
+                        f.write(device_list)
+        except IOError:
+            #檔案可能無法讀取或不存在
+            #直接創新的
+            with open('schedule.txt', 'w') as f:
+                f.write(device_list)
+            print("Error: file no find or can not read")
+    else:
+        #沒有網路連線時
+        print("Lost connect!")
+        #lcd 顯示 Lost connect!
+        pass
+
     if  schedule_list:
         try:
             with open('schedule.txt', 'r') as f:

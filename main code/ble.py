@@ -37,6 +37,7 @@ class MyDelegate(DefaultDelegate):
 
 def ble_connect(devAddr):
     global ble_conn
+    #ble_conn = None
     if not devAddr is None and ble_conn is None:
         ble_conn = Peripheral(devAddr, ADDR_TYPE_PUBLIC)
         ble_conn.setDelegate(MyDelegate(ble_conn))
@@ -71,11 +72,18 @@ def ble_disconnect():
     #print("disconnected")
 
 def ble(mac,text):
-    ble_connect(mac)
-    time.sleep(0.025)
-    temp=ble_data(text)
-    ble_disconnect()
-    return temp
+    connect_timeout=10
+    temp=None
+    try:
+        with time_limit(connect_timeout):
+            ble_connect(mac)
+            time.sleep(0.05)
+            temp=ble_data(text)
+            ble_disconnect()
+            return temp
+    except TimeoutException as e:
+        return "Timedout!"
+        
 
 def ble_scan():
     timeout=10.0
@@ -114,7 +122,7 @@ def ble_initializing():
                     time.sleep(0.025)
                     temp=ble_data("test")
                     ble_disconnect()
-                    if temp=="Ok!":
+                    if temp=="ok":
                         arr.append(dev.addr)
                         lcd_print(1,0,1,"SUCCESS!           ")
                     else:

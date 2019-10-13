@@ -39,78 +39,92 @@ def BT_sync(command):
     lcd_print(0,0,1,"Sync begining")
     print("Load Device'mac from file")
     try:
-        with open('device.txt', 'r') as f:
+        with open('device_list.txt', 'r') as f:
             device_mac_list = eval(f.readline())
         for mac in device_mac_list:
+            print(mac)
             if command=="env":
                 temp = ble(mac,"upe")
-                if temp:
-                    f = open("env.txt", 'w')
-                    print(temp, file=f)
-                    f.close()
-                    time.sleep(10) #等待藍芽斷線
-                    temp = ble(mac,"dle")
-                    if temp == "Del:ok":
-                        print("Sucess Del Arduino's env.txt")
-                    else:
-                        print("Error")
-                    f = open("env.txt")
-                    while True:
-                        line = f.readline()
-                        if len(line) == 41 or len(line) == 32: #簡單的資料長度驗證
-                            if upload_data(upload_url,line):
-                                sucess += 1
-                            else:
-                                fail += 1
+                #print(temp)
+                if temp!="":
+                    if temp !="Timedout!":
+                        f = open("env.txt", 'w')
+                        print(temp, file=f)
+                        f.close()
+                        time.sleep(5) #等待藍芽斷線
+                        temp = ble(mac,"dle")
+                        print(temp)
+                        if temp == "Del:ok":
+                            print("Sucess Del Arduino's env.txt")
                         else:
-                            break
-                        time.sleep(0.1)
-                    print("Sucess: " + str(sucess) + " Fail: " + str(fail))
-                    f.close()
-                    if os.path.exists("env.txt"):
-                        os.remove("env.txt")
-                        print("Sucess Del Pi's env.txt")
+                            print("Error")
+                        print("Upload begining")
+                        f = open("env.txt")
+                        while True:
+                            line = f.readline()
+                            if len(line) == 35: #簡單的資料長度驗證
+                                if upload_data(upload_url,line):
+                                    sucess += 1
+                                else:
+                                    fail += 1
+                            else:
+                                break
+                            time.sleep(0.05)
+                        print("Sucess: " + str(sucess) + " Fail: " + str(fail))
+                        f.close()
+                        if os.path.exists("env.txt"):
+                            os.remove("env.txt")
+                            print("Sucess Del Pi's env.txt")
+                        else:
+                            print("The file does not exist")
+                        lcd_print(1,0,1,"Done!             ")
                     else:
-                        print("The file does not exist")
+                        lcd_print(1,0,1,"Timed out!            ")
                 else:
                     lcd_print(1,0,1,"Fail!,No data")
-                    pass
+                    time.sleep(5)
             if command=="pet":
                 temp = ble(mac,"upp")
-                if temp:
-                    f = open("pet.txt", 'w')
-                    print(temp, file=f)
-                    f.close()
-                    time.sleep(10) #等待藍芽斷線
-                    temp = ble(mac,"dlp")
-                    if temp == "Del:ok":
-                        print("Sucess Del Arduino's petenv.txt")
-                    else:
-                        print("Error")
-                    f = open("pet.txt")
-                    while True:
-                        line = f.readline()
-                        if len(line) == 41 or len(line) == 32: #簡單的資料長度驗證
-                            if upload_data(upload_url,line):
-                                sucess += 1
-                            else:
-                                fail += 1
+                #print(temp)
+                if temp!="":
+                    if temp !="Timedout!":
+                        f = open("pet.txt", 'w')
+                        print(temp, file=f)
+                        f.close()
+                        time.sleep(10) #等待藍芽斷線
+                        temp = ble(mac,"dlp")
+                        print(temp)
+                        if temp == "Del:ok":
+                            print("Sucess Del Arduino's pet.txt")
                         else:
-                            break
-                        time.sleep(0.1)
-                    print("Sucess: " + str(sucess) + " Fail: " + str(fail))
-                    f.close()
-                    if os.path.exists("pet.txt"):
-                        os.remove("pet.txt")
-                        print("Sucess Del Pi's pet.txt")
+                            print("Error")
+                        print("Upload begining")
+                        f = open("pet.txt")
+                        while True:
+                            line = f.readline()
+                            if len(line) == 35: #簡單的資料長度驗證
+                                if upload_data(upload_url,line):
+                                    sucess += 1
+                                else:
+                                    fail += 1
+                            else:
+                                break
+                            time.sleep(0.1)
+                        print("Sucess: " + str(sucess) + " Fail: " + str(fail))
+                        f.close()
+                        if os.path.exists("pet.txt"):
+                            os.remove("prt.txt")
+                            print("Sucess Del Pi's pet.txt")
+                        else:
+                            print("The file does not exist")
+                        lcd_print(1,0,1,"Done!             ")
                     else:
-                        print("The file does not exist")
+                        lcd_print(1,0,1,"Timed out!            ")
                 else:
                     lcd_print(1,0,1,"Fail!,No data")
+                    time.sleep(10)
     except IOError:
         print("Error: file no find or can not read")
-    lcd_print(1,0,1,"Done!")
-    time.sleep(10)
 
 def Schedule_sync():
     global sched,schedule_list_url,device_list_url
@@ -188,10 +202,11 @@ def Device_sync():
 
 if __name__ == "__main__":
     #sync_time()
-    sched.add_job(Schedule_sync, 'interval', seconds=10)
+    #sched.add_job(Schedule_sync, 'interval', seconds=10)
     #sched.add_job(task1, 'interval', seconds=10)
     #sched.add_job(BT_sync_env, 'interval', seconds=60)
     #sched.add_job(BT_sync_pet, 'interval', seconds=120)
     # BT_update("env")
-    sched.start()
-    # pass
+    #sched.start()
+    Device_sync()
+    BT_sync("env")

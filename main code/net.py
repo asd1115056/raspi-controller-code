@@ -1,4 +1,4 @@
-#from lcd import *
+from lcd import *
 import requests
 import json
 
@@ -10,7 +10,7 @@ test_url='https://www.google.com.tw/webhp?hl=zh-TW'
 
 params1 = "E111585004FCC6224266200240005400"
 params2 = "P111585004FCC6224266206D1CDF2B0988700000"
-'''
+
 def net_initializing():
     #check django Server Satute
     global test_url
@@ -35,13 +35,13 @@ def net_initializing():
             os.remove("device_list.txt")
             print("Remove old Device_list.txt ")
         lcd_clearall()
-'''
+
 
 def upload_data(url,text):
     try:
         params = {'DATA': text}
         headers = {'content-type': 'application/json'}
-        response = requests.post(url, data=json.dumps(params), headers=headers,timeout=20)
+        response = requests.post(url, data=json.dumps(params), headers=headers,timeout=2)
         response.raise_for_status()
         return True
         #print(response.text)

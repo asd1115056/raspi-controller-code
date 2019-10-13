@@ -22,7 +22,7 @@ HX711 scale;
 #define ratio 400.352
 
 #define DHTPIN 36
-#define DHTTYPE DHT11
+#define DHTTYPE DHT22
 DHT_Unified dht(DHTPIN, DHTTYPE);
 
 #define RtcSquareWavePin 2       // Mega2560
@@ -393,7 +393,6 @@ void loop() {
       myFile = SD.open("env.txt", FILE_WRITE);
       if (myFile) {
         myFile.print("E");
-        myFile.print(location_code);
 
         myFile.print(Ble);
         Serial.println(Ble);

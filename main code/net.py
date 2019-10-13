@@ -30,6 +30,10 @@ def net_initializing():
             #刪掉暫存檔
             os.remove("schedule.txt")
             print("Remove old schedule.txt ")
+        if os.path.exists("schedule.txt"):
+            #刪掉暫存檔
+            os.remove("device_list.txt")
+            print("Remove old Device_list.txt ")
         lcd_clearall()
 '''
 

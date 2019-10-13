@@ -1,6 +1,7 @@
 from bluepy.btle import *
 from lcd import *
 import signal
+import time
 from contextlib import contextmanager
 
 service__uuid = "0000ffe0-0000-1000-8000-00805f9b34fb"

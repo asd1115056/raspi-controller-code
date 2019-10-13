@@ -1,6 +1,6 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
 from datetime import datetime
-#from ble import *
+from ble import *
 from net import *
 import requests
 import ntplib
@@ -31,96 +31,98 @@ def task(a, b, c):
     print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), a, b, c )
 
 
-def BT_sync_env():
-    #lcd_clearall()
-    #lcd_print(1,0,1"Sync begining")
-    pass
-'''
-def BT_sync_pet():
-    print("BT_sync: begin")
-    print("Send pet command")
-    temp = ble("upp")
-    if temp != "":
-        print("done!")
-        print("Save file....")
-        f = open("pet.txt", 'w')
-        print(temp, file=f)
-        f.close()
-        print("done!")
-        time.sleep(10)
-        print("Send del command....")
-        temp = ble("dlp")
-        if temp == "Del:ok":
-            print("done")
-        print("BT_update:begin")
-        sucess = 0
-        fail = 0
-        f = open("pet.txt")
-        while True:
-            line = f.readline()
-            if len(line) == 22 or len(line) == 32:
-                if upload(line) == 200:
-                    sucess += 1
+def BT_sync(command):
+    global upload_url
+    sucess = 0
+    fail = 0
+    lcd_clearall()
+    lcd_print(0,0,1,"Sync begining")
+    print("Load Device'mac from file")
+    try:
+        with open('device.txt', 'r') as f:
+            device_mac_list = eval(f.readline())
+        for mac in device_mac_list:
+            if command=="env":
+                temp = ble(mac,"upe")
+                if temp:
+                    f = open("env.txt", 'w')
+                    print(temp, file=f)
+                    f.close()
+                    time.sleep(10) #等待藍芽斷線
+                    temp = ble(mac,"dle")
+                    if temp == "Del:ok":
+                        print("Sucess Del Arduino's env.txt")
+                    else:
+                        print("Error")
+                    f = open("env.txt")
+                    while True:
+                        line = f.readline()
+                        if len(line) == 41 or len(line) == 32: #簡單的資料長度驗證
+                            if upload_data(upload_url,line):
+                                sucess += 1
+                            else:
+                                fail += 1
+                        else:
+                            break
+                        time.sleep(0.1)
+                    print("Sucess: " + str(sucess) + " Fail: " + str(fail))
+                    f.close()
+                    if os.path.exists("env.txt"):
+                        os.remove("env.txt")
+                        print("Sucess Del Pi's env.txt")
+                    else:
+                        print("The file does not exist")
                 else:
-                    fail += 1
-            else:
-                break
-            time.sleep(0.05)
-        print("Sucess: " + str(sucess) + " Fail: " + str(fail))
-        f.close()
-        if os.path.exists("pet.txt"):
-            os.remove("pet.txt")
-            print("Sucess del pet.txt")
-        else:
-            print("The file does not exist")
-        print("done")
-    else:
-        print("blank")
-'''
-
+                    lcd_print(1,0,1,"Fail!,No data")
+                    pass
+            if command=="pet":
+                temp = ble(mac,"upp")
+                if temp:
+                    f = open("pet.txt", 'w')
+                    print(temp, file=f)
+                    f.close()
+                    time.sleep(10) #等待藍芽斷線
+                    temp = ble(mac,"dlp")
+                    if temp == "Del:ok":
+                        print("Sucess Del Arduino's petenv.txt")
+                    else:
+                        print("Error")
+                    f = open("pet.txt")
+                    while True:
+                        line = f.readline()
+                        if len(line) == 41 or len(line) == 32: #簡單的資料長度驗證
+                            if upload_data(upload_url,line):
+                                sucess += 1
+                            else:
+                                fail += 1
+                        else:
+                            break
+                        time.sleep(0.1)
+                    print("Sucess: " + str(sucess) + " Fail: " + str(fail))
+                    f.close()
+                    if os.path.exists("pet.txt"):
+                        os.remove("pet.txt")
+                        print("Sucess Del Pi's pet.txt")
+                    else:
+                        print("The file does not exist")
+                else:
+                    lcd_print(1,0,1,"Fail!,No data")
+    except IOError:
+        print("Error: file no find or can not read")
+    lcd_print(1,0,1,"Done!")
+    time.sleep(10)
 
 def Schedule_sync():
     global sched,schedule_list_url,device_list_url
     #開機時網路測試順便刪掉暫存檔
     schedule_list=download_schedule(schedule_list_url)
-    device_list=download_device(device_list_url)
-    if  device_list:
-        try:
-            with open('schedule.txt', 'r') as f:
-                file_data = f.readline()
-                if  file_data:
-                    if  eval(device_list)==eval(file_data):
-                        print("Same data pass")
-                        pass
-                    else:
-                        #刪掉舊任務後創建新任務並存檔
-                        Add_Scheduler(eval(device_list))
-                        with open('schedule.txt', 'w') as f:
-                            f.write(device_list)
-                else:
-                    #直接創新的
-                    print("Create new Scheduler")
-                    with open('schedule.txt', 'w') as f:
-                        f.write(device_list)
-        except IOError:
-            #檔案可能無法讀取或不存在
-            #直接創新的
-            with open('schedule.txt', 'w') as f:
-                f.write(device_list)
-            print("Error: file no find or can not read")
-    else:
-        #沒有網路連線時
-        print("Lost connect!")
-        #lcd 顯示 Lost connect!
-        pass
-
     if  schedule_list:
         try:
             with open('schedule.txt', 'r') as f:
                 file_data = f.readline()
                 if  file_data:
                     if  eval(schedule_list)==eval(file_data):
-                        print(sched.get_jobs(),"Same data pass")
+                        print(sched.get_jobs(),"Schedule_list same, pass")
                         pass
                     else:
                         #刪掉舊任務後創建新任務並存檔
@@ -148,6 +150,39 @@ def Schedule_sync():
         print("Lost connect!")
         #lcd 顯示 Lost connect!
         pass
+
+def Device_sync():
+    global device_list_url
+    device_list=download_device(device_list_url)
+    if  device_list:
+        try:
+            with open('device_list.txt', 'r') as f:
+                device_list_data = f.readline()
+                if  device_list_data:
+                    if  eval(device_list)==eval(device_list_data):
+                        print("Device_list smae, pass")
+                        pass
+                    else:
+                        #刪掉舊任務後創建新任務並存檔
+                        with open('device_list.txt', 'w') as f:
+                            f.write(device_list_data)
+                else:
+                    #直接創新的
+                    print("Create new Device_list")
+                    with open('device_list.txt', 'w') as f:
+                        f.write(device_list_data)
+        except IOError:
+            #檔案可能無法讀取或不存在
+            #直接創新的
+            with open('device_list.txt', 'w') as f:
+                f.write(device_list_data)
+            print("Error: file no find or can not read")
+    else:
+        #沒有網路連線時
+        print("Lost connect!")
+        #lcd 顯示 Lost connect!
+        pass
+
 
 
 

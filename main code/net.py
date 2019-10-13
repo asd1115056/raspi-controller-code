@@ -1,6 +1,7 @@
 from lcd import *
 import requests
 import json
+import os
 
 schedule_list_url = 'http://localhost:8000/api/schedule_list'
 device_list_url = 'http://localhost:8000/api/device_list'
@@ -15,15 +16,15 @@ def net_initializing():
     #check django Server Satute
     global test_url
     lcd_clearall()
-    lcd_print(0,0,0.5,"Net Initializing")
+    lcd_print(0,0,2,"Net Initializing")
     lcd_print(1,0,2,"Connecting.....    ")
     try:
         response = requests.get(test_url,timeout=20)
         response.raise_for_status()
-        lcd_print(1,0,1,"SUCCESS!        ")
+        lcd_print(1,0,2,"SUCCESS!         ")
         return True
     except requests.exceptions.RequestException as e:
-        lcd_print(1,0,1,"FAIL!          ")
+        lcd_print(1,0,2,"FAIL!           ")
         return False
     finally:
         if os.path.exists("schedule.txt"):
@@ -34,7 +35,6 @@ def net_initializing():
             #刪掉暫存檔
             os.remove("device_list.txt")
             print("Remove old Device_list.txt ")
-        lcd_clearall()
 
 
 def upload_data(url,text):

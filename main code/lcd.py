@@ -11,7 +11,7 @@ def lcd_clearall():
 
 def lcd_clearline(line):
     lcd.cursor_pos = (line, 0)
-    lcd.write_string("                ")
+    lcd.write_string("                 ")
 
 def lcd_print(line,postion,delay,text):
     lcd.cursor_pos = (line, postion)

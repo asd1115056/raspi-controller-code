@@ -107,7 +107,7 @@ def ble_initializing():
     scan_timeout=10
     connect_timeout=10
     lcd_clearall()
-    lcd_print(0,0,0.5,"BLE Initializing") #(line,postion,delay,text)
+    lcd_print(0,0,2,"BLE Initializing") #(line,postion,delay,text)
     lcd_print(1,0,0,"Scanning.....    ")
     scanner = Scanner().withDelegate(MyDelegate(None))
     devices = scanner.scan(scan_timeout)
@@ -115,8 +115,8 @@ def ble_initializing():
     for dev in devices:
             try:
                 with time_limit(connect_timeout):
-                    lcd_print(1,0,0.5,"Connecting....   ")
-                    lcd_print(1,0,0.5,"Devices "+ str(i)+"     ")
+                    lcd_print(1,0,1,"Connecting....   ")
+                    lcd_print(1,0,1,"Devices "+ str(i)+"     ")
                     print("MAC:", dev.addr, " Rssi ", str(dev.rssi))
                     ble_connect(dev.addr)
                     time.sleep(0.025)
@@ -124,15 +124,17 @@ def ble_initializing():
                     ble_disconnect()
                     if temp=="ok":
                         arr.append(dev.addr)
-                        lcd_print(1,0,1,"SUCCESS!           ")
+                        lcd_print(1,0,2,"SUCCESS!           ")
                     else:
-                        lcd_print(1,0,1,"FAIL!          ")  
+                        lcd_print(1,0,2,"FAIL!          ") 
             except TimeoutException as e:
-                        lcd_print(1,0,1,"Timed out!         ")
+                        lcd_print(1,0,2,"Timed out!         ")
             i+=1 
-    print("Done")
-    lcd_clearall()
-    return arr
+    #print("Done")
+    if arr:
+        return arr
+    else:
+        return False
 
 if __name__ == "__main__":
     arr=ble_initializing()

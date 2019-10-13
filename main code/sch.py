@@ -197,7 +197,44 @@ def Device_sync():
         #lcd 顯示 Lost connect!
         pass
 
-
+def Initializing():
+    global upload_url
+    lcd_clearall()
+    while True:
+        lcd_print(0,0,2,"Initializing!        ")
+        ble=ble_initializing()
+        net=net_initializing()
+        if not ble:
+            lcd_print(0,0,0,"Initializing!        ")
+            lcd_print(1,0,1,"BLE                  ")
+            lcd_print(1,4,2,"ERROR!")
+            lcd_print(1,4,1,"      ")
+            lcd_print(1,4,2,"ERROR!")
+            lcd_print(1,0,1,"                      ")
+        if not net:
+            lcd_print(0,0,0,"Initializing!         ")
+            lcd_print(1,0,1,"BLE                   ")
+            lcd_print(1,4,2,"ERROR!")
+            lcd_print(1,4,1,"      ")
+            lcd_print(1,4,2,"ERROR!")
+            lcd_print(1,0,1,"                      ")
+        if ble and net:
+            print("Upload Device's mac")
+            for x in ble:
+                print (x)
+                mac="%s%s%s%s%s%s" % (x[0:2], x[3:5], x[6:8], x[9:11], x[12:14], x[15:17])
+                mac="M"+mac
+                while True:
+                    if len(mac) == 13: #簡單的資料長度驗證
+                        if upload_data(upload_url,mac):
+                            sucess += 1
+                        else:
+                            fail += 1
+                    else:
+                        break
+                    time.sleep(0.1)
+            print("Sucess: " + str(sucess) + " Fail: " + str(fail))
+            break
 
 
 if __name__ == "__main__":
@@ -208,5 +245,6 @@ if __name__ == "__main__":
     #sched.add_job(BT_sync_pet, 'interval', seconds=120)
     # BT_update("env")
     #sched.start()
-    Device_sync()
-    BT_sync("env")
+    #Device_sync()
+    Initializing()
+    #BT_sync("env")

@@ -220,6 +220,8 @@ def Initializing():
             lcd_print(1,0,1,"                      ")
         if ble and net:
             print("Upload Device's mac")
+            sucess=0
+            fail=0
             for x in ble:
                 print (x)
                 mac="%s%s%s%s%s%s" % (x[0:2], x[3:5], x[6:8], x[9:11], x[12:14], x[15:17])

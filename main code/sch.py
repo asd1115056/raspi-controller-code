@@ -226,15 +226,13 @@ def Initializing():
                 print (x)
                 mac="%s%s%s%s%s%s" % (x[0:2], x[3:5], x[6:8], x[9:11], x[12:14], x[15:17])
                 mac="M"+mac
-                while True:
-                    if len(mac) == 13: #簡單的資料長度驗證
-                        if upload_data(upload_url,mac):
-                            sucess += 1
-                        else:
-                            fail += 1
+                #print (len(mac))
+                if len(mac) == 13: #簡單的資料長度驗證
+                    if upload_data(upload_url,mac):
+                        sucess += 1
                     else:
-                        break
-                    time.sleep(0.1)
+                        fail += 1
+                time.sleep(0.1)
             print("Sucess: " + str(sucess) + " Fail: " + str(fail))
             break
 

@@ -18,7 +18,7 @@ def Add_Scheduler(x):
     id_count = 0
     for u in x:
         temp = datetime.strptime(u['schedule_time'], '%H:%M:%S')
-        sched.add_job(task, 'cron', id=str(id_count), hour=temp.hour,minute=temp.minute, kwargs={"a": u['mac'],"b": u['Tag'], "c": u['food_amount']})
+        sched.add_job(task, 'cron', id=str(id_count), hour=temp.hour,minute=temp.minute, kwargs={"mac": u['mac'],"tag": u['Tag'], "food_amount": u['food_amount']})
         id_count += 1
 
 
@@ -27,12 +27,26 @@ def Delete_Scheduler(x):
         sched.remove_job(str(j))
 
 
-def task(a, b, c):
-    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), a, b, c )
+def task(mac, tag, food_amount):
+    #"job22bb336b099.90"
+    lcd_clearall()
+    #print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    lcd_print(0,0,1,"Feed Task!             ")
+    lcd_print(1,0,1,datetime.now().strftime("%H:%M:%S")+"      ")
+    lcd_print(1,0,1,tag+" "+food_amount+"g"+"          ")
+    food_amount = "%06.2f" % float(food_amount)
+    msg = "job"+tag+food_amount
+    temp=ble(mac,msg)
+    if temp=="ok":
+        lcd_print(2,0,1,"Done!             ")
+    else:
+        lcd_print(2,0,1,"Error!             ")
+
 
 
 def BT_sync(command):
     global upload_url
+    i=1
     sucess = 0
     fail = 0
     lcd_clearall()
@@ -42,12 +56,13 @@ def BT_sync(command):
         with open('device_list.txt', 'r') as f:
             device_mac_list = eval(f.readline())
         for mac in device_mac_list:
+            lcd_print(1,0,0.5,"Devices "+ str(i)+"      ")
             print(mac)
             if command=="env":
                 temp = ble(mac,"upe")
-                #print(temp)
                 if temp!="":
                     if temp !="Timedout!":
+                        print(temp)
                         f = open("env.txt", 'w')
                         print(temp, file=f)
                         f.close()
@@ -85,13 +100,13 @@ def BT_sync(command):
                     time.sleep(5)
             if command=="pet":
                 temp = ble(mac,"upp")
-                #print(temp)
                 if temp!="":
                     if temp !="Timedout!":
+                        print(temp)
                         f = open("pet.txt", 'w')
                         print(temp, file=f)
                         f.close()
-                        time.sleep(10) #等待藍芽斷線
+                        time.sleep(5) #等待藍芽斷線
                         temp = ble(mac,"dlp")
                         print(temp)
                         if temp == "Del:ok":
@@ -109,11 +124,11 @@ def BT_sync(command):
                                     fail += 1
                             else:
                                 break
-                            time.sleep(0.1)
+                            time.sleep(0.05)
                         print("Sucess: " + str(sucess) + " Fail: " + str(fail))
                         f.close()
                         if os.path.exists("pet.txt"):
-                            os.remove("prt.txt")
+                            os.remove("pet.txt")
                             print("Sucess Del Pi's pet.txt")
                         else:
                             print("The file does not exist")
@@ -122,7 +137,8 @@ def BT_sync(command):
                         lcd_print(1,0,1,"Timed out!            ")
                 else:
                     lcd_print(1,0,1,"Fail!,No data")
-                    time.sleep(10)
+                    time.sleep(5)
+            i+=1
     except IOError:
         print("Error: file no find or can not read")
 
@@ -226,12 +242,14 @@ def Initializing():
                 print (x)
                 mac="%s%s%s%s%s%s" % (x[0:2], x[3:5], x[6:8], x[9:11], x[12:14], x[15:17])
                 mac="M"+mac
-                #print (len(mac))
+                print (len(mac))
                 if len(mac) == 13: #簡單的資料長度驗證
                     if upload_data(upload_url,mac):
                         sucess += 1
+                        print ("s")
                     else:
                         fail += 1
+                        print ("f")
                 time.sleep(0.1)
             print("Sucess: " + str(sucess) + " Fail: " + str(fail))
             break
@@ -246,5 +264,6 @@ if __name__ == "__main__":
     # BT_update("env")
     #sched.start()
     #Device_sync()
-    Initializing()
-    #BT_sync("env")
+    #Initializing()
+    BT_sync("env")
+    BT_sync("pet")

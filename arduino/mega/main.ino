@@ -32,6 +32,7 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 #define BTPin 3       // Mega2560
 #define BTInterrupt 1 // Mega2560
 #define Ble "111585004fee" //"11:15:85:00:4f:ee"
+#define Ble_reset 13
 
 
 #define WaterFlowpin 19      // Mega2560
@@ -121,7 +122,11 @@ void HX7111() {
                           // with known weights; see the README for details
   scale.tare();           // reset the scale to 0
 }
-void setup() {
+void setup() {/*
+  digitalWrite(Ble_reset,HIGH);
+  digitalWrite(Ble_reset,LOW);
+  delay(200);
+  digitalWrite(Ble_reset,HIGH);*/
   Serial.begin(115200);
   BT.begin(115200);
   RFID.begin(19200);
@@ -159,6 +164,10 @@ void WaterFlowpulse() // measure the quantity of square wave
 }
 void loop() {
   sensors_event_t event;
+  /*
+  digitalWrite(Ble_reset,LOW);
+  delay(50);
+  digitalWrite(Ble_reset,HIGH);*/
   if (BT_statue) {
     // Serial.println("HIGH");
     Serial.println("=================== Task =======================");

@@ -1,4 +1,5 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.executors.pool import ProcessPoolExecutor
 from datetime import datetime
 from ble import *
 from net import *
@@ -8,11 +9,17 @@ import time
 import os
 import json
 
+executors = {
+      'default': ProcessPoolExecutor(10) # 最多5个进程同时执行
+  }
+
+
 
 url = 'http://localhost:8000/ajax/all_list_Schedule'
 data_upload = "http://localhost:8000/api/data_upload"
-sched = BlockingScheduler()
+sched = BlockingScheduler(executors=executors)
 count = 0
+
 
 def Add_Scheduler(x):
     id_count = 0
@@ -30,7 +37,7 @@ def Delete_Scheduler(x):
 def task(mac, tag, food_amount):
     #"job22bb336b099.90"
     lcd_clearall()
-    #print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    #print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), end='')
     lcd_print(0,0,1,"Feed Task!             ")
     lcd_print(1,0,1,datetime.now().strftime("%H:%M:%S")+"      ")
     lcd_print(1,0,1,tag+" "+food_amount+"g"+"          ")
@@ -38,9 +45,10 @@ def task(mac, tag, food_amount):
     msg = "job"+tag+food_amount
     temp=ble(mac,msg)
     if temp=="ok":
-        lcd_print(2,0,1,"Done!             ")
+        lcd_print(1,0,2,"Done!             ")
     else:
-        lcd_print(2,0,1,"Error!             ")
+        lcd_print(1,0,2,"Error!             ")
+    lcd_clearall()
 
 
 
@@ -66,13 +74,13 @@ def BT_sync(command):
                         f = open("env.txt", 'w')
                         print(temp, file=f)
                         f.close()
-                        time.sleep(5) #等待藍芽斷線
+                        time.sleep(10) #等待藍芽斷線
                         temp = ble(mac,"dle")
                         print(temp)
                         if temp == "Del:ok":
-                            print("Sucess Del Arduino's env.txt")
+                            print("Sucess! Del Arduino's env.txt")
                         else:
-                            print("Error")
+                            print("Error! Del Arduino's env.txt")
                         print("Upload begining")
                         f = open("env.txt")
                         while True:
@@ -106,7 +114,7 @@ def BT_sync(command):
                         f = open("pet.txt", 'w')
                         print(temp, file=f)
                         f.close()
-                        time.sleep(5) #等待藍芽斷線
+                        time.sleep(10) #等待藍芽斷線
                         temp = ble(mac,"dlp")
                         print(temp)
                         if temp == "Del:ok":
@@ -143,7 +151,7 @@ def BT_sync(command):
         print("Error: file no find or can not read")
 
 def Schedule_sync():
-    global sched,schedule_list_url,device_list_url
+    global sched,schedule_list_url
     #開機時網路測試順便刪掉暫存檔
     schedule_list=download_schedule(schedule_list_url)
     if  schedule_list:
@@ -235,6 +243,7 @@ def Initializing():
             lcd_print(1,4,2,"ERROR!")
             lcd_print(1,0,1,"                      ")
         if ble and net:
+            print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), end='  ')
             print("Upload Device's mac")
             sucess=0
             fail=0
@@ -242,28 +251,29 @@ def Initializing():
                 print (x)
                 mac="%s%s%s%s%s%s" % (x[0:2], x[3:5], x[6:8], x[9:11], x[12:14], x[15:17])
                 mac="M"+mac
-                print (len(mac))
+                #print (len(mac))
                 if len(mac) == 13: #簡單的資料長度驗證
                     if upload_data(upload_url,mac):
                         sucess += 1
-                        print ("s")
+                        #print ("s")
                     else:
                         fail += 1
-                        print ("f")
+                        #print ("f")
                 time.sleep(0.1)
             print("Sucess: " + str(sucess) + " Fail: " + str(fail))
             break
 
 
 if __name__ == "__main__":
+    #Initializing()
     #sync_time()
     #sched.add_job(Schedule_sync, 'interval', seconds=10)
     #sched.add_job(task1, 'interval', seconds=10)
-    #sched.add_job(BT_sync_env, 'interval', seconds=60)
+    sched.add_job(task, 'cron', id=str(10), hour=12,minute=50, kwargs={"mac": "11:15:85:00:4f:ee","tag": "e899e65f", "food_amount": "90.00"})
+    #sched.add_job(BT_sync, 'cron', hour=6,minute=9, args=["env"])
+    #sched.add_job(BT_sync,'interval', seconds=600, args=["env"])
     #sched.add_job(BT_sync_pet, 'interval', seconds=120)
     # BT_update("env")
-    #sched.start()
-    #Device_sync()
-    #Initializing()
-    BT_sync("env")
-    BT_sync("pet")
+    sched.start()
+    #BT_sync("env")
+    #BT_sync("pet")

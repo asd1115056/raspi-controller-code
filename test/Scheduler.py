@@ -1,13 +1,17 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.executors.pool import ProcessPoolExecutor
 from datetime import datetime
 import requests
 import ntplib
 import time
 import os
 import json
-
+import sys
+executors = {
+    'default': ProcessPoolExecutor(20)  # 最多5个进程同时执行
+}
 url1 = 'http://localhost:8000/ajax/all_list_Schedule'
-sched = BlockingScheduler()
+sched = BlockingScheduler(executors=executors)
 count = 0
 
 
@@ -40,6 +44,10 @@ def delete_Scheduler(x):
 
 def task(a, b):
     print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), a, b)
+
+
+def task1():
+    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 
 def sync():
@@ -86,6 +94,7 @@ def sync():
 
 
 if __name__ == "__main__":
-    sync_time()
-    sched.add_job(sync, 'interval', seconds=5)
+    # sync_time()
+    #sched.add_job(sync, 'interval', seconds=5)
+    sched.add_job(task1, 'interval', seconds=5)
     sched.start()

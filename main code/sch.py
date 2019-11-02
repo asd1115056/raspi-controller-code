@@ -1,4 +1,5 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ProcessPoolExecutor
 from datetime import datetime
 from ble import *
@@ -17,7 +18,7 @@ executors = {
 
 url = 'http://localhost:8000/ajax/all_list_Schedule'
 data_upload = "http://localhost:8000/api/data_upload"
-sched = BlockingScheduler(executors=executors)
+sched = BackgroundScheduler(executors=executors)
 count = 0
 
 

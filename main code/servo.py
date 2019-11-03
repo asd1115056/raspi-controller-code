@@ -16,7 +16,7 @@ i2c = busio.I2C(SCL, SDA)
 # Create a simple PCA9685 class instance.
 pca = PCA9685(i2c)
 pca.frequency = 50
-#lcd_print(0,0,5,"test")
+# lcd_print(0,0,5,"test")
 # To get the full range of the servo you will likely need to adjust the min_pulse and max_pulse to
 # match the stall points of the servo.
 # This is an example for the Sub-micro servo: https://www.adafruit.com/product/2201
@@ -31,13 +31,68 @@ pca.frequency = 50
 # servo7 = servo.Servo(pca.channels[7], min_pulse=600, max_pulse=2600)
 
 # The pulse range is 1000 - 2000 by default.
-servo0 = servo.Servo(pca.channels[0])
-servo1 = servo.Servo(pca.channels[1])
 
-for i in range(180):
-    servo0.angle = i
-    servo1.angle = i
-for i in range(180):
-    servo0.angle = 180 - i
-    servo1.angle = 180-  i
-pca.deinit()
+
+def Servo_move_X(Id, Direction):
+    servo = servo.Servo(pca.channels[Id])
+    try:
+        if Direction == "L":
+            # 90度置中點
+            for i in range(0, 90):
+                servo.angle = 90 - i
+        if Direction == "R":
+            for i in range(90, 180):
+                servo.angle = i
+    except ValueError:
+        print("Angle out of range")
+    finally:
+        pca.deinit()
+
+
+def Servo_move_Y(Id, Direction):
+    servo = servo.Servo(pca.channels[Id])
+    try:
+        if Direction == "D":
+            # 90度置中點
+            for i in range(0, 90):
+                servo.angle = 90 - i
+        if Direction == "U":
+            for i in range(90, 180):
+                servo.angle = i
+    except ValueError:
+        print("Angle out of range")
+    finally:
+        pca.deinit()
+        
+def Servo_move(Direction):
+    servox = servo.Servo(pca.channels[0])
+    servoy = servo.Servo(pca.channels[1])
+    try:
+        if Direction == "L":
+            # 90度置中點
+            for i in range(0, 90):
+                servox.angle = 90 - i
+        if Direction == "R":
+            for i in range(90, 180):
+                servox.angle = i
+        if Direction == "D":
+            for i in range(0, 90):
+                servoy.angle = 90 - i
+        if Direction == "U":
+            for i in range(90, 180):
+                servoy.angle = i
+    except ValueError:
+        print("Angle out of range")
+    finally:
+        pca.deinit()
+
+if __name__ == "__main__":
+    servo0 = servo.Servo(pca.channels[0])
+    servo1 = servo.Servo(pca.channels[1])
+    for i in range(180):
+        servo0.angle = i
+        servo1.angle = i
+    for i in range(180):
+        servo0.angle = 180 - i
+        servo1.angle = 180 - i
+    pca.deinit()

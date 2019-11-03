@@ -64,6 +64,14 @@ def download_device(url):
     except requests.exceptions.RequestException as e:
         return False
 
+def control(url):
+    try:
+        response = requests.get(url,timeout=20)
+        response.raise_for_status()
+        return response.text
+    except requests.exceptions.RequestException as e:
+        return False
+
         
 
 if __name__ == "__main__":

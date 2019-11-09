@@ -18,7 +18,7 @@ executors = {
 
 url = 'http://localhost:8000/ajax/all_list_Schedule'
 data_upload = "http://localhost:8000/api/data_upload"
-sched = BackgroundScheduler(executors=executors)
+sched = BlockingScheduler(executors=executors)
 count = 0
 
 
@@ -280,11 +280,3 @@ if __name__ == "__main__":
     #sched.add_job(BT_sync,'interval', seconds=600, args=["env"])
     #sched.add_job(BT_sync_pet, 'interval', seconds=120)
     sched.start()
-    control_url = 'http://localhost:8000/api/device_list'
-    while True:
-        control = control(control_url)
-        if control:
-            Servo_move(control)
-            pass
-        else:
-            pass

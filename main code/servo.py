@@ -3,7 +3,9 @@
 from board import SCL, SDA
 import busio
 from lcd import *
-
+from net import *
+import time
+import json
 # Import the PCA9685 module.
 from adafruit_pca9685 import PCA9685
 
@@ -86,13 +88,23 @@ def Servo_move(Direction):
     finally:
         pca.deinit()
 
+def Servo_move_test(Direction):
+    servox = servo.Servo(pca.channels[0])
+    servoy = servo.Servo(pca.channels[1])
+    try:
+        Direction=eval(Direction)
+        #print (Direction[0])
+        #print (type(Direction[0]))
+        servox.angle = int(Direction[0]['x_angle'])
+        print (Direction[0]['x_angle'])
+        servoy.angle = int(Direction[0]['y_angle'])
+        print (Direction[0]['y_angle'])
+    except ValueError:
+        print("Angle out of range")
+
 if __name__ == "__main__":
-    servo0 = servo.Servo(pca.channels[0])
-    servo1 = servo.Servo(pca.channels[1])
-    for i in range(180):
-        servo0.angle = i
-        servo1.angle = i
-    for i in range(180):
-        servo0.angle = 180 - i
-        servo1.angle = 180 - i
-    pca.deinit()
+    while True:
+        control_command=control('http://192.168.0.3:8000/api/control_output')
+        if control_command:
+            Servo_move_test(control_command)
+        time.sleep(1)

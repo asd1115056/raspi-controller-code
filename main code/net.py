@@ -3,9 +3,9 @@ import requests
 import json
 import os
 
-schedule_list_url = 'http://localhost:8000/api/schedule_list'
-device_list_url = 'http://localhost:8000/api/device_list'
-upload_url='http://localhost:8000/api/data_upload'
+schedule_list_url = 'http://192.168.0.3:8000/api/schedule_list'
+device_list_url = 'http://192.168.0.3:8000/api/device_list'
+upload_url='http://192.168.0.3:8000/api/data_upload'
 
 test_url='https://www.google.com.tw/webhp?hl=zh-TW'
 

@@ -96,9 +96,9 @@ def Servo_move_test(Direction):
         #print (Direction[0])
         #print (type(Direction[0]))
         servox.angle = int(Direction[0]['x_angle'])
-        print (Direction[0]['x_angle'])
+        print ("X:"+Direction[0]['x_angle'])
         servoy.angle = int(Direction[0]['y_angle'])
-        print (Direction[0]['y_angle'])
+        print ("Y:":Direction[0]['y_angle'])
     except ValueError:
         print("Angle out of range")
 

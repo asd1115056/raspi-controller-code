@@ -52,7 +52,7 @@ def task(mac, tag, food_amount):
 
 
 
-def BT_sync(command):
+def BT_sync(command,url):
     global upload_url
     i=1
     sucess = 0
@@ -86,7 +86,7 @@ def BT_sync(command):
                         while True:
                             line = f.readline()
                             if len(line) == 35: #簡單的資料長度驗證
-                                if upload_data(upload_url,line):
+                                if upload_data(url,line):
                                     sucess += 1
                                 else:
                                     fail += 1
@@ -126,7 +126,7 @@ def BT_sync(command):
                         while True:
                             line = f.readline()
                             if len(line) == 43: #簡單的資料長度驗證
-                                if upload_data(upload_url,line):
+                                if upload_data(url,line):
                                     sucess += 1
                                 else:
                                     fail += 1
@@ -150,10 +150,10 @@ def BT_sync(command):
     except IOError:
         print("Error: file no find or can not read")
 
-def Schedule_sync():
+def Schedule_sync(url):
     global sched,schedule_list_url
     #開機時網路測試順便刪掉暫存檔
-    schedule_list=download_schedule(schedule_list_url)
+    schedule_list=download_schedule(url)
     if  schedule_list:
         try:
             with open('schedule.txt', 'r') as f:
@@ -189,9 +189,9 @@ def Schedule_sync():
         #lcd 顯示 Lost connect!
         pass
 
-def Device_sync():
+def Device_sync(url):
     global device_list_url
-    device_list=download_device(device_list_url)
+    device_list=download_device(url)
     if  device_list:
         try:
             with open('device_list.txt', 'r') as f:
@@ -221,7 +221,7 @@ def Device_sync():
         #lcd 顯示 Lost connect!
         pass
 
-def Initializing():
+def Initializing(url):
     global upload_url
     lcd_clearall()
     while True:
@@ -253,7 +253,7 @@ def Initializing():
                 mac="M"+mac
                 #print (len(mac))
                 if len(mac) == 13: #簡單的資料長度驗證
-                    if upload_data(upload_url,mac):
+                    if upload_data(url,mac):
                         sucess += 1
                         #print ("s")
                     else:

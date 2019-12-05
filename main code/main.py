@@ -19,6 +19,7 @@ sched.add_job(Schedule_sync, 'interval', seconds=10,args=["schedule_list_url"])
 sched.add_job(Device_sync, 'interval', seconds=10,args=["device_list_url"])
 sched.add_job(BT_sync,'interval', seconds=61, args=["env","data_upload"])
 sched.add_job(BT_sync,'interval', seconds=121, args=["pet","data_upload"])
+#sched.add_job(BT_sync_all,'interval', seconds=60, args=["data_upload"])
 sched.start()
  
 while True:

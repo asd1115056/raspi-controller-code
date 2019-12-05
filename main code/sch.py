@@ -150,6 +150,59 @@ def BT_sync(command,url):
     except IOError:
         print("Error: file no find or can not read")
 
+def BT_sync_all(url):
+    sucess = 0
+    fail = 0
+    lcd_clearall()
+    lcd_print(0,0,1,"Sync begining")
+    print("Load Device'mac from file")
+    try:
+        with open('device_list.txt', 'r') as f:
+            device_mac_list = eval(f.readline())
+        for mac in device_mac_list:
+            lcd_print(1,0,0.5,"Devices "+ str(i)+"      ")
+            print(mac)
+            temp = ble(mac,"all")
+            if temp!="":
+                if temp !="Timedout!":
+                    print(temp)
+                    f = open("all.txt", 'w')
+                    print(temp, file=f)
+                    f.close()
+                    time.sleep(10) #等待藍芽斷線
+                    temp = ble(mac,"dla")
+                    print(temp)
+                    if temp == "Del:ok":
+                        print("Sucess! Del Arduino's all.txt")
+                    else:
+                        print("Error! Del Arduino's all.txt")
+                    print("Upload begining")
+                    f = open("all.txt")
+                    while True:
+                        line = f.readline()
+                        if len(line) == 35 or len(line)== 43: #簡單的資料長度驗證
+                            if upload_data(url,line):
+                                sucess += 1
+                            else:
+                                fail += 1
+                        else:
+                            break
+                        time.sleep(0.05)
+                    print("Sucess: " + str(sucess) + " Fail: " + str(fail))
+                    f.close()
+                    if os.path.exists("all.txt"):
+                        os.remove("all.txt")
+                        print("Sucess Del Pi's all.txt")
+                    else:
+                        print("The all.txt does not exist")
+                        lcd_print(1,0,1,"Done!             ")
+                else:
+                    lcd_print(1,0,1,"Timed out!            ")
+            else:
+                lcd_print(1,0,1,"Fail!,No data")
+    except IOError:
+        print("Error: file no find or can not read")
+
 def Schedule_sync(url):
     global sched,schedule_list_url
     #開機時網路測試順便刪掉暫存檔

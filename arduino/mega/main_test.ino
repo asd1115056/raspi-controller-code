@@ -31,7 +31,7 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 #define BT Serial2
 #define BTPin 3       // Mega2560
 #define BTInterrupt 1 // Mega2560
-#define Ble "111585004a58" //"11:15:85:00:4f:ee"
+#define Ble "000000000000"//"11:15:85:00:4f:ee"
 #define Ble_reset 13
 
 

@@ -151,6 +151,46 @@ def BT_sync(command):
                 else:
                     lcd_print(1,0,1,"Fail!,No data")
                     time.sleep(10)
+            if command=="all":
+                temp = ble(mac,"upa")
+                if temp!="":
+                    if temp !="Timedout!":
+                        print(temp)
+                        f = open("all.txt", 'w')
+                        print(temp, file=f)
+                        f.close()
+                        time.sleep(15) #等待藍芽斷線
+                        temp = ble(mac,"dla")
+                        print(temp)
+                        if temp == "Del:ok":
+                            print("Sucess! Del Arduino's all.txt")
+                        else:
+                            print("Error! Del Arduino's all.txt")
+                        print("Upload begining")
+                        f = open("all.txt")
+                        while True:
+                            line = f.readline()
+                            if len(line) == 35 or len(line) == 43: #簡單的資料長度驗證
+                                if upload_data(data_upload,line):
+                                    sucess += 1
+                                else:
+                                    fail += 1
+                            else:
+                                break
+                            time.sleep(0.05)
+                        print("Sucess: " + str(sucess) + " Fail: " + str(fail))
+                        f.close()
+                        if os.path.exists("all.txt"):
+                            os.remove("all.txt")
+                            print("Sucess Del Pi's all.txt")
+                        else:
+                            print("The file does not exist")
+                        lcd_print(1,0,1,"Done!             ")
+                    else:
+                        lcd_print(1,0,1,"Timed out!            ")
+                else:
+                    lcd_print(1,0,1,"Fail!,No data")
+                    time.sleep(10)
             i+=1
     except IOError:
         print("Error: Device.txt no find or can not read")
@@ -283,19 +323,21 @@ def Initializing(url,url1):
 if __name__ == "__main__":
     try:
         Initializing(data_upload,url1)
-        #os.system("sh autotask.sh")
-        #os.system("screen -S servo -d -m bash -c 'python3 servo.py'")
+        os.system("sh autotask.sh")
+        os.system("screen -S servo -d -m bash -c 'python3 servo.py'")
         #sched.add_job(task1, 'interval', seconds=10)
         #sched.add_job(task, 'cron', id=str(10), hour=12,minute=50, kwargs={"mac": "11:15:85:00:4f:ee","tag": "e899e65f", "food_amount": "90.00"})
         #sched.add_job(BT_sync, 'cron', hour=6,minute=9, args=["env"])
 
         #sched.add_job(Schedule_sync, 'interval', seconds=10)
         sched.add_job(Device_sync, 'interval', seconds=10)
-        sched.add_job(BT_sync,'interval', seconds=61, args=["env"])
-        sched.add_job(BT_sync,'interval', seconds=121, args=["pet"])
-        #sched.add_job(BT_sync_all,'interval', seconds=60)
+        #sched.add_job(BT_sync,'interval', seconds=61, args=["env"])
+        #sched.add_job(BT_sync,'interval', seconds=121, args=["pet"])
+        sched.add_job(BT_sync,'interval', seconds=60, args=["all"])
         sched.start()
 
     except KeyboardInterrupt:
         os.system("screen -X -S servo quit")
         os.system("screen -X -S mjpg quit")
+
+

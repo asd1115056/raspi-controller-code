@@ -169,13 +169,14 @@ def BT_sync(command):
                         print("Upload begining")
                         f = open("all.txt")
                         while True:
-                            line = f.readline()
-                            if len(line) == 35 or len(line) == 43: #簡單的資料長度驗證
-                                if upload_data(data_upload,line):
-                                    sucess += 1
-                                else:
-                                    fail += 1
-                            else:
+                            try: 
+                                line = f.readline()
+                                if len(line) == 35 or len(line) == 43: #簡單的資料長度驗證
+                                    if upload_data(data_upload,line):
+                                        sucess += 1
+                                    else:
+                                        fail += 1
+                            except:
                                 break
                             time.sleep(0.05)
                         print("Sucess: " + str(sucess) + " Fail: " + str(fail))

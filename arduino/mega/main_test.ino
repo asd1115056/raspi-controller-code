@@ -31,7 +31,7 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 #define BT Serial2
 #define BTPin 3       // Mega2560
 #define BTInterrupt 1 // Mega2560
-#define Ble "111585004fee" //"11:15:85:00:4f:ee"
+#define Ble "111585004a58" //"11:15:85:00:4f:ee"
 #define Ble_reset 13
 
 
@@ -249,19 +249,20 @@ void loop() {
             BT.write(myFile.read());
           }
           myFile.close();
-          delay(50);
+          delay(70);
           Serial.println("done");
         } else {
           Serial.println("error opening file");
         }
-      } }
+      }
       if (BT_readString.substring(0, 3) == "dla") {
         //讀取sd 回傳
         Serial.println("Del file");
         RtcDateTime now = Rtc.GetDateTime();
         printDateTime(now);
-        Serial.print("Del: ALL");
+        Serial.print("Del: all.txt");
         SD.remove("all.txt");
+        Serial.print("all.txt");
         Serial.println();
         BT.print("Del:ok");
         Serial.println("done");

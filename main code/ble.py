@@ -4,6 +4,7 @@ import signal
 import time
 from contextlib import contextmanager
 
+
 service__uuid = "0000ffe0-0000-1000-8000-00805f9b34fb"
 notify_uuid = "0000ffe1-0000-1000-8000-00805f9b34fb"
 write_uuid = "0000ffe2-0000-1000-8000-00805f9b34fb"
@@ -72,18 +73,24 @@ def ble_disconnect():
     #print("disconnected")
 
 def ble(mac,text):
-    connect_timeout=10
+    connect_timeout=15
     temp=None
     try:
         with time_limit(connect_timeout):
             ble_connect(mac)
-            time.sleep(0.05)
+            #time.sleep(0.05)
             temp=ble_data(text)
             ble_disconnect()
             return temp
     except TimeoutException as e:
         return "Timedout!"
-        
+
+def ble1(mac,text):
+    ble_connect(mac)
+    #time.sleep(0.05)
+    temp=ble_data(text)
+    ble_disconnect()
+    return temp
 
 def ble_scan():
     timeout=10.0
@@ -92,7 +99,7 @@ def ble_scan():
     for dev in devices:
             print("MAC:", dev.addr, " Rssi ", str(dev.rssi))
             try:
-                with time_limit(10):
+                with time_limit(15):
                     ble_connect(dev.addr)
                     time.sleep(0.025)
                     temp=ble_data("test")
@@ -105,9 +112,9 @@ def ble_initializing():
     i=1
     arr=[]
     scan_timeout=10
-    connect_timeout=10
+    connect_timeout=15
     lcd_clearall()
-    lcd_print(0,0,2,"BLE Initializing") #(line,postion,delay,text)
+    lcd_print(0,0,0.5,"BLE Initializing") #(line,postion,delay,text)
     lcd_print(1,0,0,"Scanning.....    ")
     scanner = Scanner().withDelegate(MyDelegate(None))
     devices = scanner.scan(scan_timeout)
@@ -115,26 +122,29 @@ def ble_initializing():
     for dev in devices:
             try:
                 with time_limit(connect_timeout):
-                    lcd_print(1,0,1,"Connecting....   ")
-                    lcd_print(1,0,1,"Devices "+ str(i)+"     ")
+                    lcd_print(1,0,0.5,"Connecting....   ")
+                    lcd_print(1,0,0.5,"Devices "+ str(i)+"     ")
+                    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                     print("MAC:", dev.addr, " Rssi ", str(dev.rssi))
                     ble_connect(dev.addr)
                     time.sleep(0.025)
                     temp=ble_data("test")
+                    #print(temp)
                     ble_disconnect()
                     if temp=="ok":
                         arr.append(dev.addr)
-                        lcd_print(1,0,2,"SUCCESS!           ")
+                        lcd_print(1,0,1,"SUCCESS!           ")
                     else:
-                        lcd_print(1,0,2,"FAIL!          ") 
+                        lcd_print(1,0,1,"FAIL!          ") 
             except TimeoutException as e:
-                        lcd_print(1,0,2,"Timed out!         ")
+                        lcd_print(1,0,1,"Timed out!         ")
             i+=1 
     #print("Done")
+    lcd_clearall()
     if arr:
         return arr
     else:
-        return False
+        return "blef"
 
 if __name__ == "__main__":
     arr=ble_initializing()

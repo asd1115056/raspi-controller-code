@@ -14,7 +14,9 @@
                 "D:\\黃柏翰\\Documents\\Arduino\\libraries\\DHT_sensor_library\\**",
                 "D:\\黃柏翰\\Documents\\Arduino\\libraries\\Adafruit_Unified_Sensor\\**",
                 "C:\\Users\\黃柏翰\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.1\\**",
-                "C:\\Users\\黃柏翰\\AppData\\Local\\Arduino15\\packages\\arduino\\tools\\**"
+                "C:\\Users\\黃柏翰\\AppData\\Local\\Arduino15\\packages\\arduino\\tools\\**",
+                "C:\\Users\\asd11\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.1\\**",
+                "C:\\Users\\asd11\\AppData\\Local\\Arduino15\\packages\\arduino\\tools\\**"
             ],
             "defines": [
                 "_DEBUG",
@@ -27,7 +29,8 @@
             "cppStandard": "c++17",
             "intelliSenseMode": "msvc-x64",
             "forcedInclude": [
-                "C:\\Users\\黃柏翰\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.1\\cores\\arduino\\Arduino.h"
+                "C:\\Users\\黃柏翰\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.1\\cores\\arduino\\Arduino.h",
+                "C:\\Users\\asd11\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.1\\cores\\arduino\\Arduino.h"
             ]
         }
     ],

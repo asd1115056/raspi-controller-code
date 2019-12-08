@@ -17,6 +17,7 @@ executors = {
 
 ip='192.168.50.112'
 url = 'http://'+ip+':8000/ajax/all_list_Schedule'
+url1='http://'+ip+':8000'
 data_upload = 'http://'+ip+':8000/api/data_upload'
 servo='http://'+ip+':8000/api/control_output'
 schedule_list_url = 'http://'+ip+':8000/api/schedule_list'
@@ -57,7 +58,7 @@ def task(mac, tag, food_amount):
 
 
 def BT_sync(command):
-    global upload_url
+    global data_upload
     i=1
     sucess = 0
     fail = 0
@@ -78,7 +79,7 @@ def BT_sync(command):
                         f = open("env.txt", 'w')
                         print(temp, file=f)
                         f.close()
-                        time.sleep(10) #等待藍芽斷線
+                        time.sleep(15) #等待藍芽斷線
                         temp = ble(mac,"dle")
                         print(temp)
                         if temp == "Del:ok":
@@ -90,7 +91,7 @@ def BT_sync(command):
                         while True:
                             line = f.readline()
                             if len(line) == 35: #簡單的資料長度驗證
-                                if upload_data(upload_url,line):
+                                if upload_data(data_upload,line):
                                     sucess += 1
                                 else:
                                     fail += 1
@@ -109,7 +110,7 @@ def BT_sync(command):
                         lcd_print(1,0,1,"Timed out!            ")
                 else:
                     lcd_print(1,0,1,"Fail!,No data")
-                    time.sleep(5)
+                    time.sleep(10)
             if command=="pet":
                 temp = ble(mac,"upp")
                 if temp!="":
@@ -118,7 +119,7 @@ def BT_sync(command):
                         f = open("pet.txt", 'w')
                         print(temp, file=f)
                         f.close()
-                        time.sleep(10) #等待藍芽斷線
+                        time.sleep(15) #等待藍芽斷線
                         temp = ble(mac,"dlp")
                         print(temp)
                         if temp == "Del:ok":
@@ -130,7 +131,7 @@ def BT_sync(command):
                         while True:
                             line = f.readline()
                             if len(line) == 43: #簡單的資料長度驗證
-                                if upload_data(upload_url,line):
+                                if upload_data(data_upload,line):
                                     sucess += 1
                                 else:
                                     fail += 1
@@ -149,10 +150,10 @@ def BT_sync(command):
                         lcd_print(1,0,1,"Timed out!            ")
                 else:
                     lcd_print(1,0,1,"Fail!,No data")
-                    time.sleep(5)
+                    time.sleep(10)
             i+=1
     except IOError:
-        print("Error: file no find or can not read")
+        print("Error: Device.txt no find or can not read")
 
 def Schedule_sync():
     global sched,schedule_list_url
@@ -187,6 +188,7 @@ def Schedule_sync():
             with open('schedule.txt', 'w') as f:
                 f.write(schedule_list)
             print("Error: file no find or can not read")
+            print("Create new Scheduler")
     else:
         #沒有網路連線時
         print("Lost connect!")
@@ -196,57 +198,59 @@ def Schedule_sync():
 def Device_sync():
     global device_list_url
     device_list=download_device(device_list_url)
+    #print(device_list)
     if  device_list:
         try:
             with open('device_list.txt', 'r') as f:
-                device_list_data = f.readline()
-                if  device_list_data:
-                    if  eval(device_list)==eval(device_list_data):
+                file_data = f.readline()
+                if  file_data:
+                    if  eval(device_list)==eval(file_data):
                         print("Device_list smae, pass")
                         pass
                     else:
                         #刪掉舊任務後創建新任務並存檔
                         with open('device_list.txt', 'w') as f:
-                            f.write(device_list_data)
+                            f.write(device_list)
                 else:
                     #直接創新的
-                    print("Create new Device_list")
+                    print("Create new device_list")
                     with open('device_list.txt', 'w') as f:
-                        f.write(device_list_data)
+                        f.write(device_list)
         except IOError:
             #檔案可能無法讀取或不存在
             #直接創新的
             with open('device_list.txt', 'w') as f:
-                f.write(device_list_data)
+                f.write(device_list)
             print("Error: file no find or can not read")
+            print("Create new device_list")
     else:
         #沒有網路連線時
         print("Lost connect!")
         #lcd 顯示 Lost connect!
         pass
 
-def Initializing():
+def Initializing(url,url1):
     global upload_url
     lcd_clearall()
     while True:
         lcd_print(0,0,2,"Initializing!        ")
         ble=ble_initializing()
-        net=net_initializing()
-        if not ble:
+        net=net_initializing(url1)
+        if ble == "blef":
             lcd_print(0,0,0,"Initializing!        ")
             lcd_print(1,0,1,"BLE                  ")
             lcd_print(1,4,2,"ERROR!")
             lcd_print(1,4,1,"      ")
             lcd_print(1,4,2,"ERROR!")
             lcd_print(1,0,1,"                      ")
-        if not net:
+        if net =="netf":
             lcd_print(0,0,0,"Initializing!         ")
-            lcd_print(1,0,1,"BLE                   ")
+            lcd_print(1,0,1,"Net                   ")
             lcd_print(1,4,2,"ERROR!")
             lcd_print(1,4,1,"      ")
             lcd_print(1,4,2,"ERROR!")
             lcd_print(1,0,1,"                      ")
-        if ble and net:
+        if ble !="blef" and net !="netf":
             print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), end='  ')
             print("Upload Device's mac")
             sucess=0
@@ -257,7 +261,7 @@ def Initializing():
                 mac="M"+mac
                 #print (len(mac))
                 if len(mac) == 13: #簡單的資料長度驗證
-                    if upload_data(upload_url,mac):
+                    if upload_data(url,mac):
                         sucess += 1
                         #print ("s")
                     else:
@@ -265,27 +269,33 @@ def Initializing():
                         #print ("f")
                 time.sleep(0.1)
             print("Sucess: " + str(sucess) + " Fail: " + str(fail))
+            if os.path.exists("schedule.txt"):
+            #刪掉暫存檔
+                os.remove("schedule.txt")
+                print("Remove old schedule.txt ")
+            if os.path.exists("device_list.txt"):
+            #刪掉暫存檔
+                os.remove("device_list.txt")
+                print("Remove old device_list.txt ")
             break
 
 
 if __name__ == "__main__":
     try:
-        #Initializing()
-        os.system("sh autotask.sh")
-        os.system("screen -S servo -d -m bash -c 'python3 servo.py'")
+        Initializing(data_upload,url1)
+        #os.system("sh autotask.sh")
+        #os.system("screen -S servo -d -m bash -c 'python3 servo.py'")
         #sched.add_job(task1, 'interval', seconds=10)
         #sched.add_job(task, 'cron', id=str(10), hour=12,minute=50, kwargs={"mac": "11:15:85:00:4f:ee","tag": "e899e65f", "food_amount": "90.00"})
         #sched.add_job(BT_sync, 'cron', hour=6,minute=9, args=["env"])
-        '''
-        sched.add_job(Schedule_sync, 'interval', seconds=10,args=["schedule_list_url"])
-        sched.add_job(Device_sync, 'interval', seconds=10,args=["device_list_url"])
-        sched.add_job(BT_sync,'interval', seconds=61, args=["env","data_upload"])
-        sched.add_job(BT_sync,'interval', seconds=121, args=["pet","data_upload"])
-        sched.add_job(BT_sync_all,'interval', seconds=60, args=["data_upload"])
+
+        #sched.add_job(Schedule_sync, 'interval', seconds=10)
+        sched.add_job(Device_sync, 'interval', seconds=10)
+        sched.add_job(BT_sync,'interval', seconds=61, args=["env"])
+        sched.add_job(BT_sync,'interval', seconds=121, args=["pet"])
+        #sched.add_job(BT_sync_all,'interval', seconds=60)
         sched.start()
-        '''
+
     except KeyboardInterrupt:
         os.system("screen -X -S servo quit")
         os.system("screen -X -S mjpg quit")
-
-

@@ -15,8 +15,12 @@ executors = {
 
 
 
-url = 'http://192.168.0.3:8000/ajax/all_list_Schedule'
-data_upload = "http://192.168.0.3:8000/api/data_upload"
+ip='192.168.50.112'
+url = 'http://'+ip+':8000/ajax/all_list_Schedule'
+data_upload = 'http://'+ip+':8000/api/data_upload'
+servo='http://'+ip+':8000/api/control_output'
+schedule_list_url = 'http://'+ip+':8000/api/schedule_list'
+device_list_url = 'http://'+ip+':8000/api/device_list'
 sched = BlockingScheduler(executors=executors)
 count = 0
 
@@ -52,7 +56,7 @@ def task(mac, tag, food_amount):
 
 
 
-def BT_sync(command,url):
+def BT_sync(command):
     global upload_url
     i=1
     sucess = 0
@@ -86,7 +90,7 @@ def BT_sync(command,url):
                         while True:
                             line = f.readline()
                             if len(line) == 35: #簡單的資料長度驗證
-                                if upload_data(url,line):
+                                if upload_data(upload_url,line):
                                     sucess += 1
                                 else:
                                     fail += 1
@@ -126,7 +130,7 @@ def BT_sync(command,url):
                         while True:
                             line = f.readline()
                             if len(line) == 43: #簡單的資料長度驗證
-                                if upload_data(url,line):
+                                if upload_data(upload_url,line):
                                     sucess += 1
                                 else:
                                     fail += 1
@@ -150,63 +154,10 @@ def BT_sync(command,url):
     except IOError:
         print("Error: file no find or can not read")
 
-def BT_sync_all(url):
-    sucess = 0
-    fail = 0
-    lcd_clearall()
-    lcd_print(0,0,1,"Sync begining")
-    print("Load Device'mac from file")
-    try:
-        with open('device_list.txt', 'r') as f:
-            device_mac_list = eval(f.readline())
-        for mac in device_mac_list:
-            lcd_print(1,0,0.5,"Devices "+ str(i)+"      ")
-            print(mac)
-            temp = ble(mac,"all")
-            if temp!="":
-                if temp !="Timedout!":
-                    print(temp)
-                    f = open("all.txt", 'w')
-                    print(temp, file=f)
-                    f.close()
-                    time.sleep(10) #等待藍芽斷線
-                    temp = ble(mac,"dla")
-                    print(temp)
-                    if temp == "Del:ok":
-                        print("Sucess! Del Arduino's all.txt")
-                    else:
-                        print("Error! Del Arduino's all.txt")
-                    print("Upload begining")
-                    f = open("all.txt")
-                    while True:
-                        line = f.readline()
-                        if len(line) == 35 or len(line)== 43: #簡單的資料長度驗證
-                            if upload_data(url,line):
-                                sucess += 1
-                            else:
-                                fail += 1
-                        else:
-                            break
-                        time.sleep(0.05)
-                    print("Sucess: " + str(sucess) + " Fail: " + str(fail))
-                    f.close()
-                    if os.path.exists("all.txt"):
-                        os.remove("all.txt")
-                        print("Sucess Del Pi's all.txt")
-                    else:
-                        print("The all.txt does not exist")
-                        lcd_print(1,0,1,"Done!             ")
-                else:
-                    lcd_print(1,0,1,"Timed out!            ")
-            else:
-                lcd_print(1,0,1,"Fail!,No data")
-    except IOError:
-        print("Error: file no find or can not read")
-
-def Schedule_sync(url):
+def Schedule_sync():
     global sched,schedule_list_url
     #開機時網路測試順便刪掉暫存檔
-    schedule_list=download_schedule(url)
+    schedule_list=download_schedule(schedule_list_url)
     if  schedule_list:
         try:
             with open('schedule.txt', 'r') as f:
@@ -242,9 +193,9 @@ def Schedule_sync(url):
         #lcd 顯示 Lost connect!
         pass
 
-def Device_sync(url):
+def Device_sync():
     global device_list_url
-    device_list=download_device(url)
+    device_list=download_device(device_list_url)
     if  device_list:
         try:
             with open('device_list.txt', 'r') as f:
@@ -274,7 +225,7 @@ def Device_sync(url):
         #lcd 顯示 Lost connect!
         pass
 
-def Initializing(url):
+def Initializing():
     global upload_url
     lcd_clearall()
     while True:
@@ -306,7 +257,7 @@ def Initializing(url):
                 mac="M"+mac
                 #print (len(mac))
                 if len(mac) == 13: #簡單的資料長度驗證
-                    if upload_data(url,mac):
+                    if upload_data(upload_url,mac):
                         sucess += 1
                         #print ("s")
                     else:
@@ -318,13 +269,23 @@ def Initializing(url):
 
 
 if __name__ == "__main__":
-    Initializing()
-    os.system("sh autotask.sh")
-    os.system("screen -d -m bash -c 'python3 servo.py'")
-    #sched.add_job(task1, 'interval', seconds=10)
-    #sched.add_job(task, 'cron', id=str(10), hour=12,minute=50, kwargs={"mac": "11:15:85:00:4f:ee","tag": "e899e65f", "food_amount": "90.00"})
-    #sched.add_job(BT_sync, 'cron', hour=6,minute=9, args=["env"])
-    sched.add_job(Schedule_sync, 'interval', seconds=300)
-    sched.add_job(BT_sync,'interval', seconds=500, args=["env"])
-    sched.add_job(BT_sync,'interval', seconds=600, args=["pet"])
-    sched.start()
+    try:
+        #Initializing()
+        os.system("sh autotask.sh")
+        os.system("screen -S servo -d -m bash -c 'python3 servo.py'")
+        #sched.add_job(task1, 'interval', seconds=10)
+        #sched.add_job(task, 'cron', id=str(10), hour=12,minute=50, kwargs={"mac": "11:15:85:00:4f:ee","tag": "e899e65f", "food_amount": "90.00"})
+        #sched.add_job(BT_sync, 'cron', hour=6,minute=9, args=["env"])
+        '''
+        sched.add_job(Schedule_sync, 'interval', seconds=10,args=["schedule_list_url"])
+        sched.add_job(Device_sync, 'interval', seconds=10,args=["device_list_url"])
+        sched.add_job(BT_sync,'interval', seconds=61, args=["env","data_upload"])
+        sched.add_job(BT_sync,'interval', seconds=121, args=["pet","data_upload"])
+        sched.add_job(BT_sync_all,'interval', seconds=60, args=["data_upload"])
+        sched.start()
+        '''
+    except KeyboardInterrupt:
+        os.system("screen -X -S servo quit")
+        os.system("screen -X -S mjpg quit")
+
+

@@ -21,12 +21,3 @@ sched.add_job(BT_sync,'interval', seconds=61, args=["env","data_upload"])
 sched.add_job(BT_sync,'interval', seconds=121, args=["pet","data_upload"])
 #sched.add_job(BT_sync_all,'interval', seconds=60, args=["data_upload"])
 sched.start()
- 
-while True:
-    try:
-        control_command=control('servo')
-        if control_command:
-            Servo_move_test(control_command)
-    except :
-        pass
-    time.sleep(0.5)

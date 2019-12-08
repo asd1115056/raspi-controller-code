@@ -6,6 +6,8 @@ from lcd import *
 from net import *
 import time
 import json
+import sys
+import os
 # Import the PCA9685 module.
 from adafruit_pca9685 import PCA9685
 
@@ -34,6 +36,11 @@ pca.frequency = 50
 
 # The pulse range is 1000 - 2000 by default.
 
+#ip=str(sys.argv[1])
+#time_delay=float(sys.argv[2])
+
+ip='192.168.50.112'
+control_ip='http://'+ip+':8000/api/control_output'
 
 def Servo_move_X(Id, Direction):
     servo = servo.Servo(pca.channels[Id])
@@ -96,15 +103,18 @@ def Servo_move_test(Direction):
         #print (Direction[0])
         #print (type(Direction[0]))
         servox.angle = int(Direction[0]['x_angle'])
-        print ("X:"+Direction[0]['x_angle'])
+        print (Direction[0]['x_angle'])
         servoy.angle = int(Direction[0]['y_angle'])
-        print ("Y:":Direction[0]['y_angle'])
+        print (Direction[0]['y_angle'])
     except ValueError:
         print("Angle out of range")
 
 if __name__ == "__main__":
     while True:
-        control_command=control('http://192.168.0.3:8000/api/control_output')
+        control_command=control(sys.argv[1])
         if control_command:
             Servo_move_test(control_command)
-        time.sleep(1)
+        else:
+            print("Loss connect")
+        time.sleep(0.5)
+

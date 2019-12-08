@@ -62,6 +62,7 @@ def BT_sync(command):
     i=1
     sucess = 0
     fail = 0
+    error=0
     lcd_clearall()
     lcd_print(0,0,1,"Sync begining")
     print("Load Device'mac from file")
@@ -168,18 +169,19 @@ def BT_sync(command):
                             print("Error! Del Arduino's all.txt")
                         print("Upload begining")
                         f = open("all.txt")
-                        while True:
-                            try: 
-                                line = f.readline()
-                                if len(line) == 35 or len(line) == 43: #簡單的資料長度驗證
-                                    if upload_data(data_upload,line):
-                                        sucess += 1
-                                    else:
-                                        fail += 1
-                            except:
+                        while True: 
+                            line = f.readline()
+                            if len(line) == 35 or len(line) == 43: #簡單的資料長度驗證
+                                if upload_data(data_upload,line):
+                                    sucess += 1
+                                else:
+                                    fail += 1
+                            else:
+                                error+=1
+                            if line=='':
                                 break
-                            time.sleep(0.05)
-                        print("Sucess: " + str(sucess) + " Fail: " + str(fail))
+                            time.sleep(0.001)
+                        print("Sucess: " + str(sucess) + " Fail: " + str(fail) +" Error: "+str(error))
                         f.close()
                         if os.path.exists("all.txt"):
                             os.remove("all.txt")
@@ -323,9 +325,9 @@ def Initializing(url,url1):
 
 if __name__ == "__main__":
     try:
-        Initializing(data_upload,url1)
-        os.system("sh autotask.sh")
-        os.system("screen -S servo -d -m bash -c 'python3 servo.py'")
+        #Initializing(data_upload,url1)
+        #os.system("sh autotask.sh")
+        #os.system("screen -S servo -d -m bash -c 'python3 servo.py'")
         #sched.add_job(task1, 'interval', seconds=10)
         #sched.add_job(task, 'cron', id=str(10), hour=12,minute=50, kwargs={"mac": "11:15:85:00:4f:ee","tag": "e899e65f", "food_amount": "90.00"})
         #sched.add_job(BT_sync, 'cron', hour=6,minute=9, args=["env"])
@@ -334,7 +336,7 @@ if __name__ == "__main__":
         sched.add_job(Device_sync, 'interval', seconds=10)
         #sched.add_job(BT_sync,'interval', seconds=61, args=["env"])
         #sched.add_job(BT_sync,'interval', seconds=121, args=["pet"])
-        sched.add_job(BT_sync,'interval', seconds=60, args=["all"])
+        sched.add_job(BT_sync,'interval', seconds=120, args=["all"])
         sched.start()
 
     except KeyboardInterrupt:

@@ -10,9 +10,9 @@
 #include <Wire.h> // must be included here so that Arduino library object file references work
 #include <string.h>
 
-#define STEPS 100 //設置步進馬達旋轉一圈是多少步
-Stepper stepper(STEPS, 9, 10, 11,
-                12); //設置步進馬達的步數和引腳(Pin9, Pin10, Pin11, Pin12)
+#define dirPin 8
+#define stepPin 9
+void stepper(int stepsPerRevolution,int stepSpeed);
 
 RtcDS3231<TwoWire> Rtc(Wire);
 
@@ -134,6 +134,8 @@ void setup() {/*
   dht.begin();
   HX7111();
   RTC();
+  pinMode(stepPin, OUTPUT);
+  pinMode(dirPin, OUTPUT);
   pinMode(BTPin, INPUT_PULLUP);
   pinMode(RFID_statue_pin, INPUT);
   pinMode(WaterFlowpin, INPUT);
@@ -216,8 +218,7 @@ void loop() {
                 while (1) {
                   //倒飼料
 
-                  stepper.step(36);
-
+                  stepper(3200,200);
                   // scale.power_up();
                   j2 = scale.get_units(5);
                   // scale.power_down();
@@ -468,3 +469,16 @@ void printDateTime(const RtcDateTime &dt) {
              dt.Day(), dt.Hour(), dt.Minute(), dt.Second());
   Serial.println(datestring);
 }
+void stepper(int stepsPerRevolution,int stepSpeed){
+    // Set the spinning direction clockwise:
+  digitalWrite(dirPin, HIGH);
+  // Spin the stepper motor 1 revolution slowly:
+  for (int i = 0; i < stepsPerRevolution; i++) {
+    // These four lines result in 1 step:
+    digitalWrite(stepPin, HIGH);
+    delayMicroseconds(stepSpeed);
+    digitalWrite(stepPin, LOW);
+    delayMicroseconds(stepSpeed);
+  }
+  //delay(1000);
+  }

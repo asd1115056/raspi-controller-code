@@ -12,6 +12,7 @@
 
 #define dirPin 8
 #define stepPin 9
+#define dir true
 void stepper(int stepsPerRevolution,int stepSpeed);
 
 RtcDS3231<TwoWire> Rtc(Wire);
@@ -471,7 +472,7 @@ void printDateTime(const RtcDateTime &dt) {
 }
 void stepper(int stepsPerRevolution,int stepSpeed){
     // Set the spinning direction clockwise:
-  digitalWrite(dirPin, HIGH);
+  digitalWrite(dirPin, dir);
   // Spin the stepper motor 1 revolution slowly:
   for (int i = 0; i < stepsPerRevolution; i++) {
     // These four lines result in 1 step:

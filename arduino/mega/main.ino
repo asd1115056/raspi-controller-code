@@ -10,14 +10,15 @@
 #include <Wire.h> // must be included here so that Arduino library object file references work
 #include <string.h>
 
-#define STEPS 100 //設置步進馬達旋轉一圈是多少步
-Stepper stepper(STEPS, 9, 10, 11,
-                12); //設置步進馬達的步數和引腳(Pin9, Pin10, Pin11, Pin12)
+#define dirPin 51
+#define stepPin 53
+//#define dir true
+void stepper(bool dir, int stepsPerRevolution,int stepSpeed);
 
 RtcDS3231<TwoWire> Rtc(Wire);
 
-const int LOADCELL_DOUT_PIN = 5;
-const int LOADCELL_SCK_PIN = 6;
+const int LOADCELL_DOUT_PIN = 43;
+const int LOADCELL_SCK_PIN = 41;
 HX711 scale;
 #define ratio 400.352
 
@@ -31,7 +32,7 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 #define BT Serial2
 #define BTPin 3       // Mega2560
 #define BTInterrupt 1 // Mega2560
-#define Ble "111585004fee" //"11:15:85:00:4f:ee"
+#define Ble "000000000000"//"11:15:85:00:4f:ee"
 #define Ble_reset 13
 
 
@@ -60,7 +61,7 @@ Sd2Card card;
 SdVolume volume;
 SdFile root;
 
-const int buzzerpin = 8; // 用Pin8 輸出方波至蜂鳴器
+const int buzzerpin = 38; // 用Pin8 輸出方波至蜂鳴器
 
 void RTC() {
   pinMode(RtcSquareWavePin, INPUT_PULLUP);
@@ -111,8 +112,7 @@ void SD1() {
     Serial.println("Fail!");
     return;
   }
-  SD.remove("pet.txt");
-  SD.remove("env.txt");
+  SD.remove("all.txt");
   Serial.println("Success!");
 }
 void HX7111() {
@@ -135,13 +135,14 @@ void setup() {/*
   dht.begin();
   HX7111();
   RTC();
+  pinMode(stepPin, OUTPUT);
+  pinMode(dirPin, OUTPUT);
   pinMode(BTPin, INPUT_PULLUP);
   pinMode(RFID_statue_pin, INPUT);
   pinMode(WaterFlowpin, INPUT);
   attachInterrupt(BTInterrupt, BTRoutine, RISING);
   attachInterrupt(WaterFlowInterrupt, WaterFlowpulse, RISING);
   pinMode(buzzerpin, OUTPUT);
-  stepper.setSpeed(STEPS);
   Serial.println("RFID...Success!");
   Serial.println("BLE...Success!");
   Serial.println("DHT11...Success!");
@@ -217,8 +218,8 @@ void loop() {
                 while (1) {
                   //倒飼料
 
-                  stepper.step(36);
-
+                  stepper(true,6400,100);
+                  stepper(false,6400,100);
                   // scale.power_up();
                   j2 = scale.get_units(5);
                   // scale.power_down();
@@ -239,55 +240,31 @@ void loop() {
           }
         }
       }
-      if (BT_readString.substring(0, 3) == "upp") {
+      if (BT_readString.substring(0, 3) == "upa") {
         //讀取sd 回傳
-        Serial.println("Send pet data by BLE");
+        Serial.println("Send all data by BLE");
         RtcDateTime now = Rtc.GetDateTime();
         printDateTime(now);
-        myFile = SD.open("pet.txt");
+        myFile = SD.open("all.txt");
         if (myFile) {
           while (myFile.available()) {
             BT.write(myFile.read());
           }
           myFile.close();
-          delay(50);
+          delay(70);
           Serial.println("done");
         } else {
           Serial.println("error opening file");
         }
       }
-      if (BT_readString.substring(0, 3) == "upe") {
-        //讀取sd 回傳
-        Serial.println("Send env data by BLE");
-        RtcDateTime now = Rtc.GetDateTime();
-        printDateTime(now);
-        myFile = SD.open("env.txt");
-        if (myFile) {
-          while (myFile.available()) {
-            BT.write(myFile.read());
-          }
-          myFile.close();
-          delay(50);
-          Serial.println("done");
-        } else {
-          Serial.println("error opening file");
-        }
-      }
-      if (BT_readString.substring(0, 3) == "dlp" ||
-          BT_readString.substring(0, 3) == "dle") {
+      if (BT_readString.substring(0, 3) == "dla") {
         //讀取sd 回傳
         Serial.println("Del file");
         RtcDateTime now = Rtc.GetDateTime();
         printDateTime(now);
-        Serial.print("Del: ");
-        if (BT_readString.substring(0, 3) == "dlp") {
-          SD.remove("pet.txt");
-          Serial.print("pet.txt");
-        }
-        if (BT_readString.substring(0, 3) == "dle") {
-          SD.remove("env.txt");
-          Serial.print("env.txt");
-        }
+        Serial.print("Del: all.txt");
+        SD.remove("all.txt");
+        Serial.print("all.txt");
         Serial.println();
         BT.print("Del:ok");
         Serial.println("done");
@@ -301,7 +278,7 @@ void loop() {
     if (RFID_statue) {
       TAG = "";
       RFID.write(searchCMD, 5);
-      delay(120);
+      delay(100);
       if (RFID.available()) {
         RFID.readBytes(searchRES, 10);
         if (searchRES[0] == 0xaa && searchRES[3] != 0xdf) {
@@ -312,7 +289,7 @@ void loop() {
           if (TAG != "") {
             Serial.println("=================== Task =======================");
             Serial.println("RFID:Record pet data");
-            myFile = SD.open("pet.txt", FILE_WRITE);
+            myFile = SD.open("all.txt", FILE_WRITE);
             if (myFile) {
               myFile.print("P");
               myFile.print(Ble);
@@ -399,7 +376,7 @@ void loop() {
       sensors_event_t event;
       Serial.println("=================== Task =======================");
       Serial.println("Alarm:Record env data");
-      myFile = SD.open("env.txt", FILE_WRITE);
+      myFile = SD.open("all.txt", FILE_WRITE);
       if (myFile) {
         myFile.print("E");
 
@@ -493,3 +470,16 @@ void printDateTime(const RtcDateTime &dt) {
              dt.Day(), dt.Hour(), dt.Minute(), dt.Second());
   Serial.println(datestring);
 }
+void stepper(bool dir,int stepsPerRevolution,int stepSpeed){
+    // Set the spinning direction clockwise:
+  digitalWrite(dirPin, dir);
+  // Spin the stepper motor 1 revolution slowly:
+  for (int i = 0; i < stepsPerRevolution; i++) {
+    // These four lines result in 1 step:
+    digitalWrite(stepPin, HIGH);
+    delayMicroseconds(stepSpeed);
+    digitalWrite(stepPin, LOW);
+    delayMicroseconds(stepSpeed);
+  }
+  //delay(1000);
+  }
